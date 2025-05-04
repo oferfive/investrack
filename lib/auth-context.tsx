@@ -78,6 +78,8 @@ async function createProfileIfExists(user: User) {
 
     if (!existingProfile) {
       console.log('No existing profile found, creating new one');
+      
+      // First try with avatar_url
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
         .insert([
@@ -85,7 +87,6 @@ async function createProfileIfExists(user: User) {
             id: user.id,
             email: user.email,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-            avatar_url: user.user_metadata?.avatar_url || null,
             updated_at: new Date().toISOString()
           }
         ])
@@ -93,11 +94,30 @@ async function createProfileIfExists(user: User) {
         .single();
 
       if (insertError) {
-        console.error('Error creating profile:', insertError);
-        throw insertError;
-      }
+        console.log('First insert attempt failed, trying without avatar_url:', insertError);
+        // If that fails, try without avatar_url
+        const { data: retryProfile, error: retryError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+              updated_at: new Date().toISOString()
+            }
+          ])
+          .select()
+          .single();
 
-      console.log('Successfully created profile:', newProfile);
+        if (retryError) {
+          console.error('Error creating profile (second attempt):', retryError);
+          throw retryError;
+        }
+
+        console.log('Successfully created profile (second attempt):', retryProfile);
+      } else {
+        console.log('Successfully created profile:', newProfile);
+      }
     } else {
       console.log('Profile already exists:', existingProfile);
     }
