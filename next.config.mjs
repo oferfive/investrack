@@ -10,7 +10,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    domains: ['uqpaoogojkxuuncjmgbj.supabase.co'],
+    domains: ['uqpaoogojkxuuncjmgbj.supabase.co', 'ouoydyymdhofhzrrvndv.supabase.co'],
   },
   async headers() {
     return [

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "Track and manage your investments in one place",
   generator: 'v0.dev',
   icons: {
-    icon: 'https://uqpaoogojkxuuncjmgbj.supabase.co/storage/v1/object/public/public-assets//favicon.svg'
+    icon: 'https://ouoydyymdhofhzrrvndv.supabase.co/storage/v1/object/public/public-assets//favicon.svg'
   }
 }
 

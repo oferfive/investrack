@@ -30,7 +30,7 @@ export default function LoginPage() {
         <div className="hidden md:block w-full max-w-md">
           <div className="aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
             <img
-              src="https://uqpaoogojkxuuncjmgbj.supabase.co/storage/v1/object/public/public-assets//invrstrack-login-image.png"
+              src="https://ouoydyymdhofhzrrvndv.supabase.co/storage/v1/object/public/public-assets//invrstrack-login-image.png"
               alt="Cozy workspace illustration"
               className="object-cover w-full h-full"
             />
@@ -82,7 +82,7 @@ export default function LoginPage() {
               </div>
               <button
                 type="button"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-600/80 hover:backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                 disabled
               >
                 Log In
