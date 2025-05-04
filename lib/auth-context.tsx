@@ -65,6 +65,19 @@ async function createProfileIfExists(user: User) {
       return;
     }
 
+    // First, check if we can access the profiles table
+    const { data: testAccess, error: testError } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1);
+
+    if (testError) {
+      console.error('Error accessing profiles table:', testError);
+      throw testError;
+    }
+
+    console.log('Successfully accessed profiles table');
+
     const { data: existingProfile, error: selectError } = await supabase
       .from('profiles')
       .select('id')
@@ -73,51 +86,39 @@ async function createProfileIfExists(user: User) {
 
     if (selectError && selectError.code !== 'PGRST116') {
       console.error('Error checking for existing profile:', selectError);
-      return;
+      throw selectError;
     }
 
     if (!existingProfile) {
       console.log('No existing profile found, creating new one');
       
-      // First try with avatar_url
+      const profileData = {
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('Attempting to create profile with data:', profileData);
+
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
-        .insert([
-          {
-            id: user.id,
-            email: user.email,
-            full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-            updated_at: new Date().toISOString()
-          }
-        ])
+        .insert([profileData])
         .select()
         .single();
 
       if (insertError) {
-        console.log('First insert attempt failed, trying without avatar_url:', insertError);
-        // If that fails, try without avatar_url
-        const { data: retryProfile, error: retryError } = await supabase
+        console.error('Error creating profile:', insertError);
+        // Try to get more details about the error
+        const { data: errorDetails } = await supabase
           .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              email: user.email,
-              full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-              updated_at: new Date().toISOString()
-            }
-          ])
-          .select()
-          .single();
-
-        if (retryError) {
-          console.error('Error creating profile (second attempt):', retryError);
-          throw retryError;
-        }
-
-        console.log('Successfully created profile (second attempt):', retryProfile);
-      } else {
-        console.log('Successfully created profile:', newProfile);
+          .select('*')
+          .limit(1);
+        console.log('Profiles table sample data:', errorDetails);
+        throw insertError;
       }
+
+      console.log('Successfully created profile:', newProfile);
     } else {
       console.log('Profile already exists:', existingProfile);
     }
