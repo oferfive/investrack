@@ -1,0 +1,41 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Project Name: InvesTrack Web App (React + Supabase)
+Architecture Overview
+Frontend: React (Vite or Next.js), styled with TailwindCSS or shadcn/ui
+Backend: Supabase (auth, database, functions, API)
+AI Layer: Optional GPT-based parsing (PDFs), risk classification, etc.
+Deployment Target: Web app (mobile-responsive)
+Core Principles
+Prioritize simplicity and speed of iteration.
+Minimize custom backend logic: use Supabase functions and real-time
+database features.
+Keep architecture flat and composable; no unnecessary abstractions.
+Leverage agents only for discrete tasks: parsing, pre-tagging, yield calc
+helpers.
+Code Style & Folder Structure (Frontend)
+Use pages/ or routes/ (if using Next.js or Vite)
+Use components/ for atomic UI elements
+Use lib/ or utils/ for reusable helpers (e.g., currency conversions, yield
+calculators)
+TailwindCSS for layout and styling
+Cursor rules 1
+Use React Query or SWR for data fetching
+Supabase Rules
+Use row-level security (RLS) for user-owned data
+Auth via Supabase Auth (email login for MVP)
+Schema tables: users , assets , transactions , statements , prices
+Use Supabase Edge Functions for parsing or scheduled background tasks
+AI/Agents
+Do not auto-run AI parsing unless user initiates it
+Use GPT or Claude for:
+Parsing uploaded statements into structured asset data
+Optional risk level suggestion
+Optional explanation of portfolio breakdowns
+Boundaries
+Do not build full financial advisory features
+Do not connect live bank integrations yet (manual or statement upload only)
+Avoid premature optimization or over-engineering

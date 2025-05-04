@@ -1,0 +1,22 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This rule provides a template for creating new Express services:
+
+Use this template when creating a new Express service:
+
+Follow RESTful principles
+Include error handling middleware
+Set up proper logging
+@express-service-template.ts
+
+This rule defines the structure for React components:
+
+React components should follow this layout:
+
+Props interface at the top
+Component as named export
+Styles at the bottom
+@component-template.tsx
