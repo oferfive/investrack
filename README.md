@@ -91,4 +91,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 - Built with [Next.js](https://nextjs.org/)
 - Styled with [TailwindCSS](https://tailwindcss.com/)
 - Backend powered by [Supabase](https://supabase.com/)
-- UI components from [shadcn/ui](https://ui.shadcn.com/) 
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
