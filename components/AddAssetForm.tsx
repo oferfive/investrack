@@ -58,11 +58,13 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[AddAssetForm] Form submitted');
     
     if (!user) {
-      console.error('No user found');
+      console.error('[AddAssetForm] No user found');
       return;
     }
+    console.log('[AddAssetForm] User found:', user.id);
 
     const assetData = {
       user_id: user.id,
@@ -79,6 +81,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       recurring_frequency: formData.recurringFrequency,
       notes: formData.notes,
     };
+    console.log('[AddAssetForm] Asset data to be submitted:', assetData);
 
     try {
       setIsLoading(true);
@@ -87,8 +90,10 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
         .insert([assetData])
         .select();
       
+      console.log('[AddAssetForm] Supabase response:', { data, error });
+      
       if (error) {
-        console.error('Error adding asset:', error);
+        console.error('[AddAssetForm] Error adding asset:', error);
         setError(error.message);
         setIsLoading(false);
         return;
@@ -116,7 +121,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
         onSuccess();
       }
     } catch (err) {
-      console.error('Unexpected error:', err);
+      console.error('[AddAssetForm] Unexpected error:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
