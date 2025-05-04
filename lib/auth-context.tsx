@@ -54,8 +54,14 @@ function initializeAuthState() {
 // Shared profile creation function
 async function createProfileIfExists(user: User) {
   try {
+    console.log('Attempting to create profile for user:', {
+      id: user?.id,
+      email: user?.email,
+      metadata: user?.user_metadata
+    });
+
     if (!user?.id || !user?.email) {
-      console.error('Missing user ID or email');
+      console.error('Missing user ID or email:', { user });
       return;
     }
 
@@ -71,22 +77,33 @@ async function createProfileIfExists(user: User) {
     }
 
     if (!existingProfile) {
-      const { error: insertError } = await supabase
+      console.log('No existing profile found, creating new one');
+      const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
         .insert([
           {
             id: user.id,
             email: user.email,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+            avatar_url: user.user_metadata?.avatar_url || null,
+            updated_at: new Date().toISOString()
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error creating profile:', insertError);
+        throw insertError;
       }
+
+      console.log('Successfully created profile:', newProfile);
+    } else {
+      console.log('Profile already exists:', existingProfile);
     }
   } catch (error) {
     console.error('Unexpected error in createProfileIfExists:', error);
+    throw error;
   }
 }
 
@@ -96,11 +113,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const listenerRef = useRef<((user: User | null) => void) | null>(null);
 
   useEffect(() => {
+    console.log('AuthProvider mounted');
+    console.log('Current auth state:', {
+      user: globalAuthState.user,
+      initialized: globalAuthState.initialized,
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL
+    });
+
     // Initialize global auth state if not already done
     initializeAuthState();
     
     // Create a listener function
     const listener = (newUser: User | null) => {
+      console.log('Auth state changed:', { newUser });
       setUser(newUser);
       setLoading(false);
     };
@@ -113,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // If we already have a user, update state immediately
     if (globalAuthState.user) {
+      console.log('Found existing user:', globalAuthState.user);
       setUser(globalAuthState.user);
       setLoading(false);
     }
@@ -126,19 +153,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGitHub = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
+    console.log('Initiating GitHub sign-in');
+    console.log('Redirect URL:', `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          scopes: 'read:user user:email'
+        }
+      });
+
+      if (error) {
+        console.error('GitHub sign-in error:', error);
+        throw error;
       }
-    });
-    if (error) {
-      console.error('GitHub sign-in error:', error);
-      throw error;
+
+      console.log('GitHub sign-in initiated successfully:', data);
+    } catch (err) {
+      console.error('Unexpected error during GitHub sign-in:', err);
+      throw err;
     }
   };
 
