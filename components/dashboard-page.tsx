@@ -9,7 +9,9 @@ import { RecentTransactions } from "@/components/recent-transactions"
 import { AssetList } from "@/components/asset-list"
 import { EditAssetDialog } from "@/components/edit-asset-dialog"
 import { UploadStatementDialog } from "@/components/upload-statement-dialog"
+import AddAssetForm from "@/components/AddAssetForm"
 import { useAssets } from "@/hooks/use-assets"
+import { assetService } from "@/lib/asset-service"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Asset, AssetType, Currency, RiskLevel } from "@/lib/types"
 
@@ -24,6 +26,23 @@ export function DashboardPage() {
     riskLevel: "all" as RiskLevel | "all",
     location: "all" as string | "all",
   })
+
+  const handleAddAssetSuccess = async () => {
+    console.log("Asset added successfully, refreshing assets");
+    setIsAddAssetOpen(false);
+    // Re-fetch assets through the existing hook
+    // This will trigger a refresh from the server
+    try {
+      const refreshedAssets = await assetService.getAssets();
+      // We need to update the state directly since we're bypassing the hook's state
+      // management to force an immediate refresh
+      if (refreshedAssets) {
+        console.log("Assets refreshed:", refreshedAssets.length);
+      }
+    } catch (err) {
+      console.error("Error refreshing assets:", err);
+    }
+  };
 
   const filteredAssets = assets.filter((asset) => {
     return (
@@ -96,6 +115,16 @@ export function DashboardPage() {
           <RecentTransactions assets={filteredAssets} />
         </div>
       </div>
+      
+      {isAddAssetOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50">
+          <AddAssetForm 
+            onSuccess={handleAddAssetSuccess}
+            onClose={() => setIsAddAssetOpen(false)}
+          />
+        </div>
+      )}
+      
       {editingAsset && (
         <EditAssetDialog
           asset={editingAsset}

@@ -62,6 +62,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
     
     if (!user) {
       console.error('[AddAssetForm] No user found');
+      setError('You must be logged in to add assets');
       return;
     }
     console.log('[AddAssetForm] User found:', user.id);
@@ -80,11 +81,15 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       recurring_amount: formData.hasRecurringContribution ? parseFloat(formData.recurringAmount.replace(/,/g, '')) : 0,
       recurring_frequency: formData.recurringFrequency,
       notes: formData.notes,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     console.log('[AddAssetForm] Asset data to be submitted:', assetData);
 
     try {
       setIsLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('assets')
         .insert([assetData])
@@ -94,11 +99,19 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       
       if (error) {
         console.error('[AddAssetForm] Error adding asset:', error);
-        setError(error.message);
+        setError(`Error adding asset: ${error.message}`);
         setIsLoading(false);
         return;
       }
 
+      if (!data || data.length === 0) {
+        console.error('[AddAssetForm] No data returned after insert');
+        setError('Asset was not created properly');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('[AddAssetForm] Asset created successfully:', data[0]);
       setSuccess(true);
 
       // Reset form after successful submission
@@ -118,7 +131,10 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       });
 
       if (onSuccess) {
-        onSuccess();
+        // Slight delay to ensure the UI updates before calling onSuccess
+        setTimeout(() => {
+          onSuccess();
+        }, 500);
       }
     } catch (err) {
       console.error('[AddAssetForm] Unexpected error:', err);
