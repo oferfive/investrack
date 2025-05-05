@@ -39,31 +39,33 @@ export const assetService = {
   
   async addAsset(asset: Omit<Asset, 'id'>) {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      // First try to get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError) {
-        console.error('Error getting current user:', userError);
-        throw new Error('Failed to authenticate user');
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
+        throw new Error('Failed to get session');
       }
       
-      if (!user) {
-        console.error('No authenticated user found when adding asset');
-        throw new Error('User not authenticated');
+      if (!session) {
+        console.error('No active session found');
+        throw new Error('No active session');
       }
       
       // Ensure user_id is set to current user
       const assetWithUserId = {
         ...asset,
-        user_id: user.id,
+        user_id: session.user.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
       console.log('Adding asset with data:', {
         ...assetWithUserId,
-        user_id: user.id // Explicitly log user_id
+        user_id: session.user.id
       });
       
+      // Try to insert the asset
       const { data, error } = await supabase
         .from('assets')
         .insert(assetWithUserId)
@@ -72,6 +74,41 @@ export const assetService = {
       
       if (error) {
         console.error('Error adding asset:', error);
+        
+        // If the error is due to an invalid session, try to refresh it
+        if (error.message.includes('JWT expired') || error.message.includes('Invalid JWT')) {
+          console.log('Session appears to be invalid, attempting to refresh...');
+          
+          const { data: { session: newSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('Error refreshing session:', refreshError);
+            throw new Error('Failed to refresh session');
+          }
+          
+          if (!newSession) {
+            throw new Error('No session after refresh');
+          }
+          
+          // Retry the insert with the new session
+          const { data: retryData, error: retryError } = await supabase
+            .from('assets')
+            .insert({
+              ...assetWithUserId,
+              user_id: newSession.user.id
+            })
+            .select()
+            .single();
+            
+          if (retryError) {
+            console.error('Error on retry after session refresh:', retryError);
+            throw retryError;
+          }
+          
+          console.log('Successfully added asset after session refresh:', retryData);
+          return retryData as Asset;
+        }
+        
         throw error;
       }
       

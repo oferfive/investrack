@@ -65,6 +65,13 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       setError('You must be logged in to add assets');
       return;
     }
+
+    // Prevent multiple submissions while loading
+    if (isLoading) {
+      console.log('[AddAssetForm] Form is already submitting');
+      return;
+    }
+
     console.log('[AddAssetForm] User found:', user.id);
 
     const assetData = {
@@ -90,24 +97,30 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       setIsLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
+      // Add timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 10000);
+      });
+
+      const supabasePromise = supabase
         .from('assets')
         .insert([assetData])
         .select();
+
+      const result = await Promise.race([supabasePromise, timeoutPromise]) as { data: any[] | null; error: any };
+      const { data, error } = result;
       
       console.log('[AddAssetForm] Supabase response:', { data, error });
       
       if (error) {
         console.error('[AddAssetForm] Error adding asset:', error);
         setError(`Error adding asset: ${error.message}`);
-        setIsLoading(false);
         return;
       }
 
       if (!data || data.length === 0) {
         console.error('[AddAssetForm] No data returned after insert');
         setError('Asset was not created properly');
-        setIsLoading(false);
         return;
       }
       
@@ -138,7 +151,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       }
     } catch (err) {
       console.error('[AddAssetForm] Unexpected error:', err);
-      setError('An unexpected error occurred');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -233,14 +246,13 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
               onChange={handleChange}
               className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
             >
-              <option value="stock">Stock</option>
               <option value="etf">ETF</option>
               <option value="realEstate">Real Estate</option>
-              <option value="cash">Cash</option>
-              <option value="crypto">Cryptocurrency</option>
-              <option value="bond">Bond</option>
-              <option value="other">Other</option>
               <option value="gemel">Gemel</option>
+              <option value="stock">Stock</option>
+              <option value="bond">Bond</option>
+              <option value="crypto">Cryptocurrency</option>
+              <option value="other">Other</option>
             </select>
           </div>
 
