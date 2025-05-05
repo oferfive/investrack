@@ -54,10 +54,9 @@ function initializeAuthState() {
 // Shared profile creation function
 async function createProfileIfExists(user: User) {
   try {
-    console.log('Attempting to create profile for user:', {
+    console.log('Checking profile for user:', {
       id: user?.id,
       email: user?.email,
-      metadata: user?.user_metadata
     });
 
     if (!user?.id || !user?.email) {
@@ -65,53 +64,52 @@ async function createProfileIfExists(user: User) {
       return;
     }
 
-    // First, check if we can access the profiles table
-    const { data: testAccess, error: testError } = await supabase
-      .from('profiles')
-      .select('count')
-      .limit(1);
+    // Improved profile check
+    try {
+      console.log('Looking for existing profile with ID:', user.id);
+      
+      // Try to get the profile directly - this should work if RLS is configured correctly
+      const { data: existingProfile, error: selectError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
+      
+      console.log('Profile lookup result:', { existingProfile, selectError });
 
-    if (testError) {
-      console.error('Error accessing profiles table:', testError);
-      console.error('Error details:', {
-        code: testError.code,
-        message: testError.message,
-        details: testError.details,
-        hint: testError.hint
-      });
-      throw testError;
-    }
-
-    console.log('Successfully accessed profiles table');
-
-    const { data: existingProfile, error: selectError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.error('Error checking for existing profile:', selectError);
-      console.error('Error details:', {
-        code: selectError.code,
-        message: selectError.message,
-        details: selectError.details,
-        hint: selectError.hint
-      });
-      throw selectError;
-    }
-
-    if (!existingProfile) {
+      if (existingProfile) {
+        console.log('Found existing profile:', existingProfile);
+        // Just update the profile's last access time
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+          
+        if (updateError) {
+          console.error('Error updating profile last access:', updateError);
+        } else {
+          console.log('Updated profile last access time');
+        }
+        return;
+      }
+      
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('Error checking for existing profile:', selectError);
+        return;
+      }
+      
+      // If we get here, profile doesn't exist
       console.log('No existing profile found, creating new one');
       
       const profileData = {
         id: user.id,
         email: user.email,
-        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+        full_name: user.user_metadata?.full_name || user.user_metadata?.user_name || user.email?.split('@')[0],
+        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      console.log('Attempting to create profile with data:', profileData);
+      console.log('Creating profile with data:', profileData);
 
       const { data: newProfile, error: insertError } = await supabase
         .from('profiles')
@@ -124,25 +122,17 @@ async function createProfileIfExists(user: User) {
         console.error('Error details:', {
           code: insertError.code,
           message: insertError.message,
-          details: insertError.details,
-          hint: insertError.hint
+          details: insertError.details
         });
-        // Try to get more details about the error
-        const { data: errorDetails } = await supabase
-          .from('profiles')
-          .select('*')
-          .limit(1);
-        console.log('Profiles table sample data:', errorDetails);
-        throw insertError;
+      } else {
+        console.log('Successfully created profile:', newProfile);
       }
-
-      console.log('Successfully created profile:', newProfile);
-    } else {
-      console.log('Profile already exists:', existingProfile);
+      
+    } catch (err) {
+      console.error('Error in profile check/creation:', err);
     }
   } catch (error) {
     console.error('Unexpected error in createProfileIfExists:', error);
-    throw error;
   }
 }
 
