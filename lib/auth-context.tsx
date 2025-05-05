@@ -29,26 +29,56 @@ const globalAuthState: AuthState = {
 };
 
 // Initialize the global auth state once
-function initializeAuthState() {
+async function initializeAuthState() {
   if (globalAuthState.initialized) return;
 
-  globalAuthState.initialized = true;
+  console.log('Initializing global auth state');
   
-  // Set up the auth state change listener only once
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-    const newUser = session?.user ?? null;
-    globalAuthState.user = newUser;
-    
-    // Notify all listeners
-    globalAuthState.listeners.forEach(listener => listener(newUser));
-    
-    // Create profile if needed
-    if (newUser) {
-      await createProfileIfExists(newUser);
+  try {
+    // First check if we already have a session
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      console.log('Found existing session on initialization:', { 
+        id: session.user.id,
+        email: session.user.email
+      });
+      globalAuthState.user = session.user;
+      
+      // Make sure profile exists for existing session
+      await createProfileIfExists(session.user);
+    } else {
+      console.log('No existing session found on initialization');
     }
-  });
-  
-  globalAuthState.subscription = subscription;
+    
+    // Set up the auth state change listener only once
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      console.log('Auth state change event:', event);
+      const newUser = session?.user ?? null;
+      
+      if (newUser) {
+        console.log('Auth state changed - user logged in:', { 
+          id: newUser.id,
+          email: newUser.email
+        });
+        
+        // Wait for profile check to complete before updating global state
+        await createProfileIfExists(newUser);
+        globalAuthState.user = newUser;
+      } else {
+        console.log('Auth state changed - user logged out');
+        globalAuthState.user = null;
+      }
+      
+      // Notify all listeners after profile is confirmed
+      globalAuthState.listeners.forEach(listener => listener(newUser));
+    });
+    
+    globalAuthState.subscription = subscription;
+    globalAuthState.initialized = true;
+    console.log('Auth state initialization complete');
+  } catch (error) {
+    console.error('Error initializing auth state:', error);
+  }
 }
 
 // Shared profile creation function
@@ -68,18 +98,22 @@ async function createProfileIfExists(user: User) {
     try {
       console.log('Looking for existing profile with ID:', user.id);
       
-      // Try to get the profile directly - this should work if RLS is configured correctly
+      // Try to get the profile directly
       const { data: existingProfile, error: selectError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .maybeSingle(); // Use maybeSingle instead of single to avoid errors if not found
+        .maybeSingle();
       
-      console.log('Profile lookup result:', { existingProfile, selectError });
+      console.log('Profile lookup result:', { 
+        found: !!existingProfile, 
+        error: selectError ? { code: selectError.code, message: selectError.message } : null 
+      });
 
       if (existingProfile) {
-        console.log('Found existing profile:', existingProfile);
-        // Just update the profile's last access time
+        console.log('Found existing profile - updating last access time');
+        
+        // Update the profile's last access time
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ updated_at: new Date().toISOString() })
@@ -88,18 +122,18 @@ async function createProfileIfExists(user: User) {
         if (updateError) {
           console.error('Error updating profile last access:', updateError);
         } else {
-          console.log('Updated profile last access time');
+          console.log('Updated profile last access time successfully');
         }
         return;
       }
       
       if (selectError && selectError.code !== 'PGRST116') {
         console.error('Error checking for existing profile:', selectError);
-        return;
+        throw selectError; // Let the error be caught by the outer catch
       }
       
-      // If we get here, profile doesn't exist
-      console.log('No existing profile found, creating new one');
+      // If we get here, profile doesn't exist and needs to be created
+      console.log('No existing profile found, creating new one for user:', user.id);
       
       const profileData = {
         id: user.id,
@@ -118,21 +152,43 @@ async function createProfileIfExists(user: User) {
         .single();
 
       if (insertError) {
-        console.error('Error creating profile:', insertError);
-        console.error('Error details:', {
+        console.error('Error creating profile:', {
           code: insertError.code,
           message: insertError.message,
           details: insertError.details
         });
+        
+        // Add special handling for potential duplicate key issues
+        if (insertError.code === '23505') { // PostgreSQL unique violation
+          console.log('Profile may already exist but was not found in the first query. Trying to fetch again...');
+          
+          // Try to get the profile one more time
+          const { data: retryProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (retryProfile) {
+            console.log('Profile found on second attempt:', retryProfile);
+            return;
+          } else {
+            console.error('Profile still not found on second attempt');
+          }
+        }
+        
+        throw insertError;
       } else {
-        console.log('Successfully created profile:', newProfile);
+        console.log('Successfully created new profile:', newProfile);
       }
       
     } catch (err) {
       console.error('Error in profile check/creation:', err);
+      throw err; // Re-throw to be caught by outer catch
     }
   } catch (error) {
     console.error('Unexpected error in createProfileIfExists:', error);
+    // Don't throw error up to caller - just log it
   }
 }
 
@@ -143,37 +199,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     console.log('AuthProvider mounted');
-    console.log('Current auth state:', {
-      user: globalAuthState.user,
-      initialized: globalAuthState.initialized,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      siteUrl: process.env.NEXT_PUBLIC_SITE_URL
-    });
-
-    // Initialize global auth state if not already done
-    initializeAuthState();
     
-    // Create a listener function
-    const listener = (newUser: User | null) => {
-      console.log('Auth state changed:', { newUser });
-      setUser(newUser);
-      setLoading(false);
-    };
+    // Track initialization state
+    let isMounted = true;
     
-    // Save reference for cleanup
-    listenerRef.current = listener;
+    async function initAuth() {
+      try {
+        // Log initial state
+        console.log('Current auth state:', {
+          user: globalAuthState.user,
+          initialized: globalAuthState.initialized,
+          supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+          siteUrl: process.env.NEXT_PUBLIC_SITE_URL
+        });
     
-    // Add this component as a listener
-    globalAuthState.listeners.add(listener);
-    
-    // If we already have a user, update state immediately
-    if (globalAuthState.user) {
-      console.log('Found existing user:', globalAuthState.user);
-      setUser(globalAuthState.user);
-      setLoading(false);
+        // Initialize global auth state if not already done
+        await initializeAuthState();
+        
+        // Check if component is still mounted 
+        if (!isMounted) return;
+        
+        // Create a listener function
+        const listener = (newUser: User | null) => {
+          console.log('AuthProvider received user update:', { 
+            userId: newUser?.id,
+            isAuthenticated: !!newUser
+          });
+          setUser(newUser);
+          setLoading(false);
+        };
+        
+        // Save reference for cleanup
+        listenerRef.current = listener;
+        
+        // Add this component as a listener
+        globalAuthState.listeners.add(listener);
+        
+        // If we already have a user, update state immediately
+        if (globalAuthState.user) {
+          console.log('Found existing user in AuthProvider:', { 
+            id: globalAuthState.user.id,
+            email: globalAuthState.user.email 
+          });
+          setUser(globalAuthState.user);
+          setLoading(false);
+        } else {
+          // No user yet, but initialization is done
+          console.log('No user found after initialization');
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in AuthProvider initialization:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
     }
     
+    initAuth();
+    
     return () => {
+      isMounted = false;
       // Remove this component as a listener on unmount
       if (listenerRef.current) {
         globalAuthState.listeners.delete(listenerRef.current);
