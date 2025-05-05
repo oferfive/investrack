@@ -240,6 +240,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
               <option value="crypto">Cryptocurrency</option>
               <option value="bond">Bond</option>
               <option value="other">Other</option>
+              <option value="gemel">Gemel</option>
             </select>
           </div>
 

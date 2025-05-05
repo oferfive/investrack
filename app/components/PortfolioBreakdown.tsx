@@ -13,6 +13,7 @@ const COLOR_MAP: Record<AssetType, string> = {
   stock: '#A855F7',      // Pink
   cash: '#F59E0B',       // Yellow
   other: '#6B7280',      // Gray
+  gemel: '#DC2626',      // Red
 };
 
 // Color mapping for risk levels
@@ -55,6 +56,8 @@ const formatLabel = (type: string): string => {
       return 'Cash';
     case 'other':
       return 'Other';
+    case 'gemel':
+      return 'Gemel';
     case 'low':
       return 'Low Risk';
     case 'medium':

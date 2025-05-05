@@ -43,6 +43,7 @@ export function getAssetTypeLabel(type: AssetType): string {
     crypto: "Crypto",
     bond: "Bond",
     other: "Other",
+    gemel: "Gemel",
   }
   return labels[type]
 }
@@ -56,6 +57,7 @@ export function getAssetTypeColor(type: AssetType): string {
     crypto: "#9333ea", // purple-600
     bond: "#0284c7", // sky-600
     other: "#6b7280", // gray-500
+    gemel: "#dc2626", // red-600
   }
   return colors[type]
 }

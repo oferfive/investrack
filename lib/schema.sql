@@ -2,7 +2,7 @@
 create extension if not exists "uuid-ossp";
 
 -- Create enum types
-create type asset_type as enum ('stock', 'etf', 'realEstate', 'cash', 'crypto', 'bond', 'other');
+create type asset_type as enum ('stock', 'etf', 'realEstate', 'cash', 'crypto', 'bond', 'other', 'gemel');
 create type currency as enum ('USD', 'EUR', 'ILS', 'GBP');
 create type risk_level as enum ('low', 'medium', 'high');
 create type recurring_frequency as enum ('weekly', 'monthly', 'quarterly', 'annually');
