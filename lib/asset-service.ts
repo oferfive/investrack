@@ -3,9 +3,17 @@ import type { Asset } from '@/lib/types';
 
 export const assetService = {
   async getAssets() {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found when fetching assets');
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('assets')
       .select('*')
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -17,9 +25,22 @@ export const assetService = {
   },
   
   async addAsset(asset: Omit<Asset, 'id'>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found when adding asset');
+      throw new Error('User not authenticated');
+    }
+    
+    // Ensure user_id is set to current user
+    const assetWithUserId = {
+      ...asset,
+      user_id: user.id
+    };
+    
     const { data, error } = await supabase
       .from('assets')
-      .insert(asset)
+      .insert(assetWithUserId)
       .select()
       .single();
     
@@ -32,6 +53,13 @@ export const assetService = {
   },
   
   async updateAsset(id: string, asset: Partial<Asset>) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found when updating asset');
+      throw new Error('User not authenticated');
+    }
+    
     const { data, error } = await supabase
       .from('assets')
       .update({
@@ -39,6 +67,7 @@ export const assetService = {
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
     
@@ -51,10 +80,18 @@ export const assetService = {
   },
   
   async deleteAsset(id: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      console.error('No authenticated user found when deleting asset');
+      throw new Error('User not authenticated');
+    }
+    
     const { error } = await supabase
       .from('assets')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
     
     if (error) {
       console.error('Error deleting asset:', error);

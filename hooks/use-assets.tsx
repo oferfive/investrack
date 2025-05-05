@@ -78,17 +78,51 @@ const initialAssets: Asset[] = [
 
 export function useAssets() {
   const { user } = useAuth()
-  const [assets, setAssets] = useState<Asset[]>(initialAssets)
+  const [assets, setAssets] = useState<Asset[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (user) {
-      assetService.getAssets().then(setAssets)
+    async function fetchAssets() {
+      if (!user) {
+        setAssets([])
+        setIsLoading(false)
+        return
+      }
+      
+      try {
+        setIsLoading(true)
+        setError(null)
+        const fetchedAssets = await assetService.getAssets()
+        setAssets(fetchedAssets)
+      } catch (err) {
+        console.error('Error fetching assets:', err)
+        setError('Failed to load assets')
+        setAssets([])
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    fetchAssets()
   }, [user])
 
   const addAsset = async (asset: Omit<Asset, "id">) => {
-    const newAsset = await assetService.addAsset(asset)
-    setAssets((prev) => [...prev, newAsset])
+    if (!user) return null
+    
+    try {
+      // Make sure to set the user_id field
+      const assetWithUserId = {
+        ...asset,
+        user_id: user.id
+      }
+      const newAsset = await assetService.addAsset(assetWithUserId)
+      setAssets((prev) => [...prev, newAsset])
+      return newAsset
+    } catch (err) {
+      console.error('Error adding asset:', err)
+      throw err
+    }
   }
 
   const updateAsset = async (id: string, asset: Partial<Asset>) => {
@@ -103,6 +137,8 @@ export function useAssets() {
 
   return {
     assets,
+    isLoading,
+    error,
     addAsset,
     updateAsset,
     deleteAsset,

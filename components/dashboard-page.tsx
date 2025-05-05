@@ -7,15 +7,17 @@ import { PortfolioSummary } from "@/components/portfolio-summary"
 import { AssetBreakdown } from "@/components/asset-breakdown"
 import { RecentTransactions } from "@/components/recent-transactions"
 import { AssetList } from "@/components/asset-list"
-import { AddAssetSheet } from "@/components/add-asset-sheet"
+import { EditAssetDialog } from "@/components/edit-asset-dialog"
 import { UploadStatementDialog } from "@/components/upload-statement-dialog"
 import { useAssets } from "@/hooks/use-assets"
-import type { AssetType, Currency, RiskLevel } from "@/lib/types"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import type { Asset, AssetType, Currency, RiskLevel } from "@/lib/types"
 
 export function DashboardPage() {
-  const { assets, addAsset, updateAsset, deleteAsset } = useAssets()
+  const { assets, isLoading, error, addAsset, updateAsset, deleteAsset } = useAssets()
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
   const [filters, setFilters] = useState({
     assetType: "all" as AssetType | "all",
     currency: "all" as Currency | "all",
@@ -33,7 +35,34 @@ export function DashboardPage() {
   })
 
   const totalValue = filteredAssets.reduce((sum, asset) => sum + asset.value, 0)
-  const totalYield = filteredAssets.reduce((sum, asset) => sum + (asset.annual_yield || 0), 0) / assets.length
+  const totalYield = assets.length > 0 
+    ? filteredAssets.reduce((sum, asset) => sum + (asset.annual_yield || 0), 0) / Math.max(1, assets.length)
+    : 0
+
+  if (isLoading) {
+    return (
+      <DashboardShell>
+        <div className="flex justify-center items-center h-[60vh]">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+            <p className="text-muted-foreground">Loading your portfolio...</p>
+          </div>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  if (error) {
+    return (
+      <DashboardShell>
+        <Alert variant="destructive" className="my-8">
+          <AlertDescription>
+            {error}. Please try refreshing the page.
+          </AlertDescription>
+        </Alert>
+      </DashboardShell>
+    )
+  }
 
   return (
     <DashboardShell>
@@ -53,7 +82,12 @@ export function DashboardPage() {
         <div className="col-span-4">
           <AssetList
             assets={filteredAssets}
-            onEdit={updateAsset}
+            onEdit={(id, asset) => {
+              const assetToEdit = assets.find(a => a.id === id);
+              if (assetToEdit) {
+                setEditingAsset(assetToEdit);
+              }
+            }}
             onDelete={deleteAsset}
             onAddAsset={() => setIsAddAssetOpen(true)}
           />
@@ -62,7 +96,19 @@ export function DashboardPage() {
           <RecentTransactions assets={filteredAssets} />
         </div>
       </div>
-      <AddAssetSheet open={isAddAssetOpen} onOpenChange={setIsAddAssetOpen} onAddAsset={addAsset} />
+      {editingAsset && (
+        <EditAssetDialog
+          asset={editingAsset}
+          open={!!editingAsset}
+          onOpenChange={() => setEditingAsset(null)}
+          onSave={(updatedAsset) => {
+            if (updatedAsset && updatedAsset.id) {
+              updateAsset(updatedAsset.id, updatedAsset);
+              setEditingAsset(null);
+            }
+          }}
+        />
+      )}
       <UploadStatementDialog
         open={isUploadOpen}
         onOpenChange={setIsUploadOpen}

@@ -73,6 +73,12 @@ async function createProfileIfExists(user: User) {
 
     if (testError) {
       console.error('Error accessing profiles table:', testError);
+      console.error('Error details:', {
+        code: testError.code,
+        message: testError.message,
+        details: testError.details,
+        hint: testError.hint
+      });
       throw testError;
     }
 
@@ -86,6 +92,12 @@ async function createProfileIfExists(user: User) {
 
     if (selectError && selectError.code !== 'PGRST116') {
       console.error('Error checking for existing profile:', selectError);
+      console.error('Error details:', {
+        code: selectError.code,
+        message: selectError.message,
+        details: selectError.details,
+        hint: selectError.hint
+      });
       throw selectError;
     }
 
@@ -109,6 +121,12 @@ async function createProfileIfExists(user: User) {
 
       if (insertError) {
         console.error('Error creating profile:', insertError);
+        console.error('Error details:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
         // Try to get more details about the error
         const { data: errorDetails } = await supabase
           .from('profiles')
@@ -184,7 +202,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
           },
           scopes: 'read:user user:email'
         }
