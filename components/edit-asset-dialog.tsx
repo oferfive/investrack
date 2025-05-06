@@ -14,7 +14,7 @@ import type { Asset } from "@/lib/types"
 
 const assetFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  type: z.enum(["stock", "etf", "realEstate", "cash", "crypto", "bond", "other", "gemel"]),
+  type: z.enum(["stock", "etf", "realEstate", "cash", "crypto", "bond", "other", "gemel", "kaspit"]),
   ticker: z.string().optional(),
   value: z.coerce.number().min(0, "Value must be positive"),
   currency: z.enum(["USD", "EUR", "ILS", "GBP"]),
@@ -121,14 +121,14 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="stock">Stock</SelectItem>
                           <SelectItem value="etf">ETF</SelectItem>
                           <SelectItem value="realEstate">Real Estate</SelectItem>
-                          <SelectItem value="cash">Cash</SelectItem>
-                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                          <SelectItem value="bond">Bond</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          <SelectItem value="kaspit">Money Market Fund (Kaspit)</SelectItem>
                           <SelectItem value="gemel">Gemel</SelectItem>
+                          <SelectItem value="stock">Stock</SelectItem>
+                          <SelectItem value="bond">Bond</SelectItem>
+                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

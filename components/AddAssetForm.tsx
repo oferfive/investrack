@@ -28,7 +28,14 @@ const parseNumber = (value: string): string => {
 };
 
 // Add predefined locations
-const LOCATIONS = ['US', 'EU', 'IL', 'Other'] as const;
+export enum Location {
+  US = 'US',
+  EU = 'EU',
+  IL = 'IL',
+  Other = 'Other'
+}
+
+const LOCATIONS = Object.values(Location);
 
 interface AddAssetFormProps {
   onSuccess?: () => void;
@@ -43,11 +50,11 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
 
   const [formData, setFormData] = useState({
     name: '',
-    type: 'stock' as AssetType,
+    type: 'etf' as AssetType,
     ticker: '',
     value: '',
     currency: 'USD' as Currency,
-    location: '',
+    location: Location.US,
     riskLevel: 'medium' as RiskLevel,
     annualYield: '',
     hasRecurringContribution: false,
@@ -81,7 +88,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       ticker: formData.ticker,
       value: parseFloat(formData.value.replace(/,/g, '')),
       currency: formData.currency,
-      location: formData.location,
+      location: formData.location || null,
       risk_level: formData.riskLevel,
       annual_yield: parseFloat(formData.annualYield.replace(/,/g, '')) || 0,
       has_recurring_contribution: formData.hasRecurringContribution,
@@ -93,100 +100,67 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
     };
     console.log('[AddAssetForm] Asset data to be submitted:', assetData);
 
-    const maxRetries = 3;
-    let retryCount = 0;
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Add timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 10000);
+      });
 
-    while (retryCount < maxRetries) {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        console.log(`[AddAssetForm] Attempt ${retryCount + 1} of ${maxRetries}`);
-        
-        // Add timeout handling with increased timeout
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Request timed out')), 20000); // Increased to 20 seconds
-        });
+      const supabasePromise = supabase
+        .from('assets')
+        .insert([assetData])
+        .select();
 
-        const supabasePromise = supabase
-          .from('assets')
-          .insert([assetData])
-          .select();
-
-        const result = await Promise.race([supabasePromise, timeoutPromise]) as { data: any[] | null; error: any };
-        const { data, error } = result;
-        
-        console.log('[AddAssetForm] Supabase response:', { data, error });
-        
-        if (error) {
-          console.error('[AddAssetForm] Error adding asset:', error);
-          
-          // Check for specific error types
-          if (error.code === '23505') { // Unique violation
-            setError('An asset with these details already exists');
-            return;
-          } else if (error.code === '42P01') { // Table doesn't exist
-            setError('Database configuration error. Please contact support.');
-            return;
-          } else if (error.code === '42501') { // Permission denied
-            setError('Permission denied. Please try logging out and back in.');
-            return;
-          }
-          
-          // For other errors, retry
-          throw error;
-        }
-
-        if (!data || data.length === 0) {
-          console.error('[AddAssetForm] No data returned after insert');
-          throw new Error('Asset was not created properly');
-        }
-        
-        console.log('[AddAssetForm] Asset created successfully:', data[0]);
-        setSuccess(true);
-
-        // Reset form after successful submission
-        setFormData({
-          name: '',
-          type: 'stock' as AssetType,
-          ticker: '',
-          value: '',
-          currency: 'USD' as Currency,
-          location: '',
-          riskLevel: 'medium' as RiskLevel,
-          annualYield: '',
-          hasRecurringContribution: false,
-          recurringAmount: '',
-          recurringFrequency: 'monthly' as RecurringFrequency,
-          notes: '',
-        });
-
-        if (onSuccess) {
-          // Slight delay to ensure the UI updates before calling onSuccess
-          setTimeout(() => {
-            onSuccess();
-          }, 500);
-        }
-        
-        // If we get here, the operation was successful
-        break;
-        
-      } catch (err) {
-        console.error(`[AddAssetForm] Attempt ${retryCount + 1} failed:`, err);
-        retryCount++;
-        
-        if (retryCount === maxRetries) {
-          setError('Failed to add asset after multiple attempts. Please try again later.');
-        } else {
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-          continue;
-        }
-      } finally {
-        if (retryCount === maxRetries) {
-          setIsLoading(false);
-        }
+      const result = await Promise.race([supabasePromise, timeoutPromise]) as { data: any[] | null; error: any };
+      const { data, error } = result;
+      
+      console.log('[AddAssetForm] Supabase response:', { data, error });
+      
+      if (error) {
+        console.error('[AddAssetForm] Error adding asset:', error);
+        setError(`Error adding asset: ${error.message}`);
+        return;
       }
+
+      if (!data || data.length === 0) {
+        console.error('[AddAssetForm] No data returned after insert');
+        setError('Asset was not created properly');
+        return;
+      }
+      
+      console.log('[AddAssetForm] Asset created successfully:', data[0]);
+      setSuccess(true);
+
+      // Reset form after successful submission
+      setFormData({
+        name: '',
+        type: 'etf' as AssetType,
+        ticker: '',
+        value: '',
+        currency: 'USD' as Currency,
+        location: Location.US,
+        riskLevel: 'medium' as RiskLevel,
+        annualYield: '',
+        hasRecurringContribution: false,
+        recurringAmount: '',
+        recurringFrequency: 'monthly' as RecurringFrequency,
+        notes: '',
+      });
+
+      if (onSuccess) {
+        // Slight delay to ensure the UI updates before calling onSuccess
+        setTimeout(() => {
+          onSuccess();
+        }, 500);
+      }
+    } catch (err) {
+      console.error('[AddAssetForm] Unexpected error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -281,6 +255,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             >
               <option value="etf">ETF</option>
               <option value="realEstate">Real Estate</option>
+              <option value="kaspit">Money Market Fund (Kaspit)</option>
               <option value="gemel">Gemel</option>
               <option value="stock">Stock</option>
               <option value="bond">Bond</option>

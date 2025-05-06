@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Create the Supabase client with proper configuration
+// Create a single instance of the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
@@ -15,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     debug: process.env.NODE_ENV === 'development',
     storageKey: 'sb-auth-token',
     storage: {
-      getItem: (key) => {
+      getItem: (key: string) => {
         try {
           return localStorage.getItem(key);
         } catch (error) {
@@ -23,14 +23,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
           return null;
         }
       },
-      setItem: (key, value) => {
+      setItem: (key: string, value: string) => {
         try {
           localStorage.setItem(key, value);
         } catch (error) {
           console.error('Error writing to localStorage:', error);
         }
       },
-      removeItem: (key) => {
+      removeItem: (key: string) => {
         try {
           localStorage.removeItem(key);
         } catch (error) {
@@ -46,5 +46,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   db: {
     schema: 'public'
+  },
+  // Add request timeout configuration
+  fetch: (url, options = {}) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+    return fetch(url, {
+      ...options,
+      signal: controller.signal
+    }).finally(() => clearTimeout(timeout));
   }
 }); 

@@ -39,6 +39,7 @@ export function getAssetTypeLabel(type: AssetType): string {
     stock: "Stock",
     etf: "ETF",
     realEstate: "Real Estate",
+    kaspit: "Money Market Fund (Kaspit)",
     cash: "Cash",
     crypto: "Crypto",
     bond: "Bond",
@@ -58,6 +59,7 @@ export function getAssetTypeColor(type: AssetType): string {
     bond: "#0284c7", // sky-600
     other: "#6b7280", // gray-500
     gemel: "#dc2626", // red-600
+    kaspit: "#0ea5e9", // sky-500
   }
   return colors[type]
 }

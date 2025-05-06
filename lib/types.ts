@@ -1,4 +1,4 @@
-export type AssetType = "stock" | "etf" | "realEstate" | "cash" | "crypto" | "bond" | "other" | "gemel"
+export type AssetType = "stock" | "etf" | "realEstate" | "cash" | "crypto" | "bond" | "other" | "gemel" | "kaspit"
 export type Currency = "USD" | "EUR" | "ILS" | "GBP"
 export type RiskLevel = "low" | "medium" | "high"
 export type RecurringFrequency = "weekly" | "monthly" | "quarterly" | "annually"
