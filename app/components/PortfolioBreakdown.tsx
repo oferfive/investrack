@@ -112,12 +112,31 @@ function institutionToPaletteColor(str: string) {
   return INSTITUTION_PALETTE[idx];
 }
 
+// Function to assign palette colors to institutions in round-robin fashion
+function assignPaletteColorsToInstitutions(institutions: string[]) {
+  const colorMap: Record<string, string> = {};
+  let paletteIndex = 0;
+  institutions.forEach((institution) => {
+    if (!(institution in colorMap)) {
+      colorMap[institution] = INSTITUTION_PALETTE[paletteIndex];
+      paletteIndex = (paletteIndex + 1) % INSTITUTION_PALETTE.length;
+    }
+  });
+  return colorMap;
+}
+
 export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
   const [breakdownType, setBreakdownType] = useState<BreakdownType>('type');
   const { isLoading: isConverting, ratesAvailable, error: conversionError, convertToUSD } = useCurrencyConversion();
 
   // Calculate portfolio breakdown
   const data = useMemo(() => {
+    // For institution breakdown, precompute color map
+    let institutionColorMap: Record<string, string> = {};
+    if (breakdownType === 'institution') {
+      const uniqueInstitutions = Array.from(new Set(assets.map(a => a.managing_institution || 'Unspecified')));
+      institutionColorMap = assignPaletteColorsToInstitutions(uniqueInstitutions);
+    }
     const breakdown = assets.reduce((acc, asset) => {
       let key: string;
       let color: string;
@@ -141,7 +160,7 @@ export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
           break;
         case 'institution':
           key = asset.managing_institution || 'Unspecified';
-          color = institutionToPaletteColor(key);
+          color = institutionColorMap[key];
           break;
       }
 

@@ -244,42 +244,43 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             />
           </div>
 
-          <div>
-            <label htmlFor="type" className="block text-sm text-gray-300 h-5 flex items-center">
-              Asset Type
-            </label>
-            <select
-              name="type"
-              id="type"
-              required
-              value={formData.type}
-              onChange={handleChange}
-              className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
-            >
-              <option value="etf">ETF</option>
-              <option value="realEstate">Real Estate</option>
-              <option value="kaspit">Money Market Fund (Kaspit)</option>
-              <option value="gemel">Gemel</option>
-              <option value="stock">Stock</option>
-              <option value="bond">Bond</option>
-              <option value="crypto">Cryptocurrency</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="ticker" className="block text-sm text-gray-300 h-5 flex items-center">
-              Ticker Symbol (if applicable)
-            </label>
-            <input
-              type="text"
-              name="ticker"
-              id="ticker"
-              value={formData.ticker}
-              onChange={handleChange}
-              placeholder="e.g. AAPL"
-              className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="type" className="block text-sm text-gray-300 h-5 flex items-center">
+                Asset Type
+              </label>
+              <select
+                name="type"
+                id="type"
+                required
+                value={formData.type}
+                onChange={handleChange}
+                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
+              >
+                <option value="etf">ETF</option>
+                <option value="realEstate">Real Estate</option>
+                <option value="kaspit">Money Market Fund (Kaspit)</option>
+                <option value="gemel">Gemel</option>
+                <option value="stock">Stock</option>
+                <option value="bond">Bond</option>
+                <option value="crypto">Cryptocurrency</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="ticker" className="block text-sm text-gray-300 h-5 flex items-center">
+                Ticker Symbol (if applicable)
+              </label>
+              <input
+                type="text"
+                name="ticker"
+                id="ticker"
+                value={formData.ticker}
+                onChange={handleChange}
+                placeholder="e.g. AAPL"
+                className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -297,6 +298,20 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                 className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
+            <div>
+              <label htmlFor="managing_institution" className="block text-sm text-gray-300 h-5 flex items-center">
+                Managing Institution
+              </label>
+              <input
+                type="text"
+                name="managing_institution"
+                id="managing_institution"
+                value={formData.managing_institution}
+                onChange={handleChange}
+                placeholder="e.g. Bank, IBKR, etc."
+                className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -310,7 +325,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                 required
                 value={formData.currency}
                 onChange={handleChange}
-                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
+                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -318,7 +333,6 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                 <option value="GBP">GBP</option>
               </select>
             </div>
-
             <div>
               <label htmlFor="location" className="block text-sm text-gray-300 h-5 flex items-center">
                 Location
@@ -329,7 +343,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                 required
                 value={formData.location}
                 onChange={handleChange}
-                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
+                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
               >
                 {LOCATIONS.map((location) => (
                   <option key={location} value={location}>
@@ -340,38 +354,22 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="riskLevel" className="block text-sm text-gray-300 h-5 flex items-center">
-                Risk Level
-              </label>
-              <select
-                name="riskLevel"
-                id="riskLevel"
-                required
-                value={formData.riskLevel}
-                onChange={handleChange}
-                className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="annualYield" className="block text-sm text-gray-300 h-5 flex items-center">
-                Annual Yield % (optional)
-              </label>
-              <input
-                type="text"
-                name="annualYield"
-                id="annualYield"
-                value={formData.annualYield}
-                onChange={handleChange}
-                className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <label htmlFor="riskLevel" className="block text-sm text-gray-300 h-5 flex items-center">
+              Risk Level
+            </label>
+            <select
+              name="riskLevel"
+              id="riskLevel"
+              required
+              value={formData.riskLevel}
+              onChange={handleChange}
+              className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
           </div>
 
           <div className="rounded-lg border border-zinc-800">
@@ -389,14 +387,12 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                   id="hasRecurringContribution"
                   checked={formData.hasRecurringContribution}
                   onChange={handleChange}
-                  className="sr-only"
+                  className="sr-only peer"
                 />
-                <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out flex items-center ${formData.hasRecurringContribution ? 'bg-blue-600' : 'bg-zinc-700'}`}>
-                  <div className={`w-5 h-5 rounded-full bg-white transform transition-transform duration-200 ease-in-out ${formData.hasRecurringContribution ? 'translate-x-6' : 'translate-x-1'}`} />
-                </div>
+                <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer dark:bg-zinc-600 peer-checked:bg-blue-600 transition-all duration-200"></div>
+                <div className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-all duration-200 peer-checked:translate-x-5"></div>
               </label>
             </div>
-
             {formData.hasRecurringContribution && (
               <div className="px-4 pb-4 pt-2 border-t border-zinc-800">
                 <div className="grid grid-cols-2 gap-4">
@@ -425,7 +421,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
                       required
                       value={formData.recurringFrequency}
                       onChange={handleChange}
-                      className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
+                      className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
                     >
                       <option value="weekly">Weekly</option>
                       <option value="monthly">Monthly</option>
@@ -442,28 +438,13 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             <label htmlFor="notes" className="block text-sm text-gray-300 h-5 flex items-center">
               Notes (optional)
             </label>
-            <input
-              type="text"
+            <textarea
               name="notes"
               id="notes"
               value={formData.notes}
               onChange={handleChange}
-              className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="managing_institution" className="block text-sm text-gray-300 h-5 flex items-center">
-              Managing Institution
-            </label>
-            <input
-              type="text"
-              name="managing_institution"
-              id="managing_institution"
-              value={formData.managing_institution}
-              onChange={handleChange}
-              placeholder="e.g. Bank of America, Fidelity, etc."
-              className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+              rows={2}
+              className="mt-1 block w-full px-2 py-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </div>

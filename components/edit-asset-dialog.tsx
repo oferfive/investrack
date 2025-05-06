@@ -20,7 +20,6 @@ const assetFormSchema = z.object({
   currency: z.enum(["USD", "EUR", "ILS", "GBP"]),
   location: z.string().min(1, "Location is required"),
   risk_level: z.enum(["low", "medium", "high"]),
-  annual_yield: z.coerce.number().optional(),
   has_recurring_contribution: z.boolean().default(false),
   recurring_amount: z.coerce.number().optional(),
   recurring_frequency: z.enum(["weekly", "monthly", "quarterly", "annually"]).optional(),
@@ -50,7 +49,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       currency: asset.currency,
       location: asset.location,
       risk_level: asset.risk_level,
-      annual_yield: asset.annual_yield,
       has_recurring_contribution: asset.has_recurring_contribution || false,
       recurring_amount: asset.recurring_amount,
       recurring_frequency: asset.recurring_frequency,
@@ -71,7 +69,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       currency: data.currency,
       location: data.location,
       risk_level: data.risk_level,
-      annual_yield: data.annual_yield,
       has_recurring_contribution: data.has_recurring_contribution,
       recurring_amount: data.recurring_amount,
       recurring_frequency: data.recurring_frequency,
@@ -111,106 +108,122 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Asset Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <div className="col-span-2 grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Asset Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="etf">ETF</SelectItem>
+                            <SelectItem value="realEstate">Real Estate</SelectItem>
+                            <SelectItem value="kaspit">Money Market Fund (Kaspit)</SelectItem>
+                            <SelectItem value="gemel">Gemel</SelectItem>
+                            <SelectItem value="stock">Stock</SelectItem>
+                            <SelectItem value="bond">Bond</SelectItem>
+                            <SelectItem value="crypto">Cryptocurrency</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="ticker"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ticker Symbol (optional)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
+                          <Input placeholder="e.g., AAPL" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="etf">ETF</SelectItem>
-                          <SelectItem value="realEstate">Real Estate</SelectItem>
-                          <SelectItem value="kaspit">Money Market Fund (Kaspit)</SelectItem>
-                          <SelectItem value="gemel">Gemel</SelectItem>
-                          <SelectItem value="stock">Stock</SelectItem>
-                          <SelectItem value="bond">Bond</SelectItem>
-                          <SelectItem value="crypto">Cryptocurrency</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="ticker"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ticker Symbol (optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., AAPL" {...field} />
-                      </FormControl>
-                      <FormDescription>For stocks, ETFs, etc.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="value"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Value (USD)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <div className="col-span-2 grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="value"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Value (USD)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
+                          <Input type="number" step="0.01" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                          <SelectItem value="ILS">ILS</SelectItem>
-                          <SelectItem value="GBP">GBP</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="managing_institution"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Managing Institution</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. Bank, IBKR, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location/Country</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., US, EU, Global" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="col-span-2 grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Currency</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select currency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="USD">USD</SelectItem>
+                            <SelectItem value="EUR">EUR</SelectItem>
+                            <SelectItem value="ILS">ILS</SelectItem>
+                            <SelectItem value="GBP">GBP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location/Country</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., US, EU, Global" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
                   name="risk_level"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="col-span-2">
                       <FormLabel>Risk Level</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -224,20 +237,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                           <SelectItem value="high">High</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="annual_yield"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Annual Yield % (optional)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" placeholder="e.g., 5.25" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -314,21 +313,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                     <FormItem className="col-span-2">
                       <FormLabel>Notes (optional)</FormLabel>
                       <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="managing_institution"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Managing Institution</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Bank of America, Fidelity, etc." {...field} />
+                        <textarea rows={2} {...field} className="mt-1 block w-full px-2 py-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -357,7 +342,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                       currency: values.currency,
                       location: values.location,
                       risk_level: values.risk_level,
-                      annual_yield: values.annual_yield,
                       has_recurring_contribution: values.has_recurring_contribution,
                       recurring_amount: values.recurring_amount,
                       recurring_frequency: values.recurring_frequency,
