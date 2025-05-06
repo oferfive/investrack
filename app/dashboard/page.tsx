@@ -133,6 +133,7 @@ function DashboardContent() {
         recurring_amount: updatedAsset.recurring_amount || 0,
         recurring_frequency: updatedAsset.recurring_frequency,
         notes: updatedAsset.notes || "",
+        managing_institution: updatedAsset.managing_institution || "",
         updated_at: new Date().toISOString()
       };
       
