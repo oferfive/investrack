@@ -12,6 +12,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import type { Asset } from "@/lib/types"
 
+// Add helper functions for number formatting
+const formatNumber = (value: string): string => {
+  // Remove any existing commas and handle empty/invalid input
+  if (!value) return '';
+  const number = value.replace(/,/g, '');
+  if (isNaN(Number(number))) return value;
+  
+  // Split into integer and decimal parts
+  const [integer, decimal] = number.split('.');
+  
+  // Add commas to integer part
+  const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  // Return with decimal if it exists
+  return decimal !== undefined ? `${formattedInteger}.${decimal}` : formattedInteger;
+};
+
+const parseNumber = (value: string): string => {
+  return value.replace(/,/g, '');
+};
+
+// Add predefined locations
+export enum Location {
+  US = 'US',
+  EU = 'EU',
+  IL = 'IL',
+  Other = 'Other'
+}
+
+const LOCATIONS = Object.values(Location);
+
 const assetFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.enum(["stock", "etf", "realEstate", "cash", "crypto", "bond", "other", "gemel", "kaspit"]),
@@ -45,12 +76,12 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       name: asset.name,
       type: asset.type,
       ticker: asset.ticker || "",
-      value: asset.value,
+      value: asset.value.toString(),
       currency: asset.currency,
       location: asset.location,
       risk_level: asset.risk_level,
       has_recurring_contribution: asset.has_recurring_contribution || false,
-      recurring_amount: asset.recurring_amount,
+      recurring_amount: asset.recurring_amount?.toString() || "",
       recurring_frequency: asset.recurring_frequency,
       notes: asset.notes || "",
       managing_institution: asset.managing_institution || "",
@@ -65,12 +96,12 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       name: data.name,
       type: data.type,
       ticker: data.ticker,
-      value: Number(data.value),
+      value: parseFloat(parseNumber(data.value)),
       currency: data.currency,
       location: data.location,
       risk_level: data.risk_level,
       has_recurring_contribution: data.has_recurring_contribution,
-      recurring_amount: data.recurring_amount,
+      recurring_amount: data.recurring_amount ? parseFloat(parseNumber(data.recurring_amount)) : undefined,
       recurring_frequency: data.recurring_frequency,
       notes: data.notes,
       managing_institution: data.managing_institution,
@@ -159,7 +190,13 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                       <FormItem>
                         <FormLabel>Current Value (USD)</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.01" {...field} />
+                          <Input 
+                            {...field} 
+                            onChange={(e) => {
+                              const formattedValue = formatNumber(e.target.value);
+                              field.onChange(formattedValue);
+                            }}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -209,10 +246,21 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location/Country</FormLabel>
-                        <FormControl>
-                          <Input placeholder="e.g., US, EU, Global" {...field} />
-                        </FormControl>
+                        <FormLabel>Location</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select location" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {LOCATIONS.map((location) => (
+                              <SelectItem key={location} value={location}>
+                                {location}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -273,7 +321,13 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                         <FormItem>
                           <FormLabel>Recurring Amount</FormLabel>
                           <FormControl>
-                            <Input type="number" step="0.01" {...field} />
+                            <Input 
+                              {...field} 
+                              onChange={(e) => {
+                                const formattedValue = formatNumber(e.target.value);
+                                field.onChange(formattedValue);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -338,12 +392,12 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                       name: values.name,
                       type: values.type,
                       ticker: values.ticker,
-                      value: Number(values.value),
+                      value: parseFloat(parseNumber(values.value)),
                       currency: values.currency,
                       location: values.location,
                       risk_level: values.risk_level,
                       has_recurring_contribution: values.has_recurring_contribution,
-                      recurring_amount: values.recurring_amount,
+                      recurring_amount: values.recurring_amount ? parseFloat(parseNumber(values.recurring_amount)) : undefined,
                       recurring_frequency: values.recurring_frequency,
                       notes: values.notes,
                       managing_institution: values.managing_institution,
