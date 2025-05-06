@@ -14,6 +14,7 @@ const COLOR_MAP: Record<AssetType, string> = {
   cash: '#F59E0B',       // Yellow
   other: '#6B7280',      // Gray
   gemel: '#DC2626',      // Red
+  kaspit: '#0ea5e9',     // Sky (added for kaspit)
 };
 
 // Color mapping for risk levels
@@ -39,8 +40,24 @@ const LOCATION_COLOR_MAP: Record<string, string> = {
   'Other': '#6B7280',  // Gray
 };
 
+// Palette of colors from existing mappings
+const INSTITUTION_PALETTE = [
+  '#10B981', // Green (realEstate, low risk, ILS)
+  '#3B82F6', // Blue (etf, USD, US)
+  '#6366F1', // Indigo (bond)
+  '#8B5CF6', // Purple (crypto, EUR, EU)
+  '#A855F7', // Pink (stock)
+  '#F59E0B', // Yellow (cash, medium risk)
+  '#6B7280', // Gray (other, Other)
+  '#DC2626', // Red (gemel, high risk, GBP)
+  '#0ea5e9', // Sky (kaspit)
+];
+
 // Helper function to format labels
-const formatLabel = (type: string): string => {
+const formatLabel = (type: string, breakdownType?: string): string => {
+  if (breakdownType === 'institution') {
+    return type === 'Unspecified' ? 'Unknwon' : type;
+  }
   switch (type) {
     case 'etf':
       return 'ETF';
@@ -69,10 +86,30 @@ const formatLabel = (type: string): string => {
   }
 };
 
-type BreakdownType = 'type' | 'currency' | 'risk' | 'location';
+type BreakdownType = 'type' | 'currency' | 'risk' | 'location' | 'institution';
 
 interface PortfolioBreakdownProps {
   assets: Asset[];
+}
+
+// Function to generate a unique color for a string (institution name)
+function stringToColor(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 60%)`;
+}
+
+// Function to assign a palette color to an institution name
+function institutionToPaletteColor(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const idx = Math.abs(hash) % INSTITUTION_PALETTE.length;
+  return INSTITUTION_PALETTE[idx];
 }
 
 export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
@@ -100,13 +137,17 @@ export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
           break;
         case 'location':
           key = asset.location;
-          color = LOCATION_COLOR_MAP[asset.location] || '#6B7280'; // Fallback to gray for unknown locations
+          color = LOCATION_COLOR_MAP[asset.location] || '#6B7280';
+          break;
+        case 'institution':
+          key = asset.managing_institution || 'Unspecified';
+          color = institutionToPaletteColor(key);
           break;
       }
 
       if (!acc[key]) {
         acc[key] = {
-          name: formatLabel(key),
+          name: formatLabel(key, breakdownType),
           value: 0,
           color
         };
@@ -148,6 +189,7 @@ export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
             <SelectItem value="currency">By Currency</SelectItem>
             <SelectItem value="risk">By Risk Level</SelectItem>
             <SelectItem value="location">By Location</SelectItem>
+            <SelectItem value="institution">By Institution</SelectItem>
           </SelectContent>
         </Select>
       </div>

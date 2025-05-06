@@ -61,6 +61,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
     recurringAmount: '',
     recurringFrequency: 'monthly' as RecurringFrequency,
     notes: '',
+    managing_institution: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,6 +96,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
       recurring_amount: formData.hasRecurringContribution ? parseFloat(formData.recurringAmount.replace(/,/g, '')) : 0,
       recurring_frequency: formData.recurringFrequency,
       notes: formData.notes,
+      managing_institution: formData.managing_institution,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -148,6 +150,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
         recurringAmount: '',
         recurringFrequency: 'monthly' as RecurringFrequency,
         notes: '',
+        managing_institution: '',
       });
 
       if (onSuccess) {
@@ -446,6 +449,21 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
               value={formData.notes}
               onChange={handleChange}
               className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="managing_institution" className="block text-sm text-gray-300 h-5 flex items-center">
+              Managing Institution
+            </label>
+            <input
+              type="text"
+              name="managing_institution"
+              id="managing_institution"
+              value={formData.managing_institution}
+              onChange={handleChange}
+              placeholder="e.g. Bank of America, Fidelity, etc."
+              className="mt-1 block w-full h-9 px-2 rounded-md bg-zinc-900 border-zinc-800 text-white placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
         </div>

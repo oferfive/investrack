@@ -32,6 +32,7 @@ create table public.assets (
   recurring_amount numeric,
   recurring_frequency recurring_frequency,
   notes text,
+  managing_institution text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

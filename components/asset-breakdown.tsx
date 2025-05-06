@@ -63,6 +63,24 @@ export function AssetBreakdown({ assets, filters, setFilters }: AssetBreakdownPr
     [] as { name: string; value: number }[],
   )
 
+  // Prepare data for managing institution breakdown
+  const managingInstitutionData = assets.reduce(
+    (acc, asset) => {
+      const institution = asset.managing_institution || 'Unspecified';
+      const existingInstitution = acc.find((item) => item.name === institution);
+      if (existingInstitution) {
+        existingInstitution.value += asset.value;
+      } else {
+        acc.push({
+          name: institution,
+          value: asset.value,
+        });
+      }
+      return acc;
+    },
+    [] as { name: string; value: number }[],
+  );
+
   // Get unique locations
   const locations = [...new Set(assets.map((asset) => asset.location))]
 
@@ -75,9 +93,10 @@ export function AssetBreakdown({ assets, filters, setFilters }: AssetBreakdownPr
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="type">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="type">By Type</TabsTrigger>
               <TabsTrigger value="risk">By Risk</TabsTrigger>
+              <TabsTrigger value="institution">By Institution</TabsTrigger>
             </TabsList>
             <TabsContent value="type" className="space-y-4">
               <div className="h-[300px]">
@@ -139,6 +158,40 @@ export function AssetBreakdown({ assets, filters, setFilters }: AssetBreakdownPr
                       labelLine={false}
                     >
                       {riskLevelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={`var(--color-${entry.name})`} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                  </PieChart>
+                </ChartContainer>
+              </div>
+            </TabsContent>
+            <TabsContent value="institution" className="space-y-4">
+              <div className="h-[300px]">
+                <ChartContainer
+                  config={managingInstitutionData.reduce(
+                    (config, item) => {
+                      config[item.name] = {
+                        label: item.name,
+                        color: `hsl(${Math.random() * 360}, 70%, 50%)`,
+                      }
+                      return config
+                    },
+                    {} as Record<string, { label: string; color: string }>,
+                  )}
+                >
+                  <PieChart className="h-full w-full">
+                    <Pie
+                      data={managingInstitutionData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {managingInstitutionData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={`var(--color-${entry.name})`} />
                       ))}
                     </Pie>

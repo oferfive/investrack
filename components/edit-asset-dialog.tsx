@@ -25,6 +25,7 @@ const assetFormSchema = z.object({
   recurring_amount: z.coerce.number().optional(),
   recurring_frequency: z.enum(["weekly", "monthly", "quarterly", "annually"]).optional(),
   notes: z.string().optional(),
+  managing_institution: z.string().optional(),
 })
 
 type AssetFormValues = z.infer<typeof assetFormSchema>
@@ -54,6 +55,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       recurring_amount: asset.recurring_amount,
       recurring_frequency: asset.recurring_frequency,
       notes: asset.notes || "",
+      managing_institution: asset.managing_institution || "",
     },
   })
 
@@ -74,6 +76,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
       recurring_amount: data.recurring_amount,
       recurring_frequency: data.recurring_frequency,
       notes: data.notes,
+      managing_institution: data.managing_institution,
       updated_at: new Date().toISOString(),
     };
 
@@ -317,6 +320,20 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="managing_institution"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Managing Institution</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Bank of America, Fidelity, etc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
               <div className="flex justify-end space-x-2">
@@ -345,6 +362,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                       recurring_amount: values.recurring_amount,
                       recurring_frequency: values.recurring_frequency,
                       notes: values.notes,
+                      managing_institution: values.managing_institution,
                       updated_at: new Date().toISOString(),
                     };
                     

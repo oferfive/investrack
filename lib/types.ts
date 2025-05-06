@@ -17,6 +17,7 @@ export interface Asset {
   recurring_amount?: number
   recurring_frequency?: RecurringFrequency
   notes?: string
+  managing_institution?: string
   created_at: string
   updated_at: string
 }
