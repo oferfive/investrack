@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { MoreHorizontal, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 
 interface AssetListViewProps {
   assets: Asset[];
@@ -32,6 +33,7 @@ interface AssetListViewProps {
 export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{id: string, name: string} | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: keyof Asset | 'recurring' | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+  const { convertToUSD } = useCurrencyConversion();
 
   // Sorting logic
   const sortedAssets = [...assets].sort((a, b) => {
@@ -42,7 +44,10 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
       aValue = a.recurring_amount && a.recurring_frequency ? a.recurring_amount + a.recurring_frequency : '';
       bValue = b.recurring_amount && b.recurring_frequency ? b.recurring_amount + b.recurring_frequency : '';
     }
-    if (sortConfig.key === 'value' || sortConfig.key === 'recurring_amount') {
+    if (sortConfig.key === 'value') {
+      aValue = convertToUSD(a.value, a.currency);
+      bValue = convertToUSD(b.value, b.currency);
+    } else if (sortConfig.key === 'recurring_amount') {
       aValue = Number(aValue);
       bValue = Number(bValue);
     }
