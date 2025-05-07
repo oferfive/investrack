@@ -79,7 +79,9 @@ export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
                     <span className="font-medium">
                       {convertToUSD(asset.value, asset.currency).toLocaleString('en-US', { 
                         style: 'currency', 
-                        currency: 'USD' 
+                        currency: 'USD',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
                       })}
                     </span>
                   </div>

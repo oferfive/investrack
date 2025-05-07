@@ -17,17 +17,21 @@ import { EditAssetDialog } from "@/components/edit-asset-dialog"
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import { UserNav } from "@/components/user-nav"
 import { useRouter } from 'next/navigation';
+import { useCurrency } from '@/lib/currency-context';
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 
 function DashboardContent() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const { selectedCurrency, setSelectedCurrency } = useCurrency();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [breakdownType, setBreakdownType] = useState<'type' | 'currency' | 'risk' | 'location'>('type');
 
-  const { isLoading: isConverting, ratesAvailable, error: conversionError, convertAssetsToUSD } = useCurrencyConversion();
+  const { isLoading: isConverting, ratesAvailable, error: conversionError, convertAssetsToCurrency } = useCurrencyConversion();
 
   useEffect(() => {
     fetchAssets();
@@ -90,11 +94,11 @@ function DashboardContent() {
   const { totalValue, averageYield } = useMemo(() => {
     if (assets.length === 0) return { totalValue: 0, averageYield: 0 };
 
-    // Convert all assets to USD for total value calculation
-    const total = convertAssetsToUSD(assets.map(asset => ({
+    // Convert all assets to selected currency for total value calculation
+    const total = convertAssetsToCurrency(assets.map(asset => ({
       amount: asset.value,
       currency: asset.currency
-    })));
+    })), selectedCurrency);
 
     const weightedYield = assets.reduce((sum, asset) => {
       const weight = asset.value / total;
@@ -105,7 +109,7 @@ function DashboardContent() {
       totalValue: total,
       averageYield: weightedYield
     };
-  }, [assets, convertAssetsToUSD]);
+  }, [assets, convertAssetsToCurrency, selectedCurrency]);
 
   // Handle edit asset
   const handleEditAsset = (asset: Asset) => {
@@ -202,7 +206,18 @@ function DashboardContent() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex flex-col">
-            <span className="text-sm text-muted-foreground">Total Portfolio Value</span>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-muted-foreground">Total Portfolio Value</span>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="currency-toggle" className="text-xs">USD</Label>
+                <Switch
+                  id="currency-toggle"
+                  checked={selectedCurrency === 'ILS'}
+                  onCheckedChange={(checked) => setSelectedCurrency(checked ? 'ILS' : 'USD')}
+                />
+                <Label htmlFor="currency-toggle" className="text-xs">ILS</Label>
+              </div>
+            </div>
             <div className="flex items-baseline gap-2">
               {isConverting || !ratesAvailable ? (
                 <span className="text-2xl font-bold animate-pulse">Loading...</span>
@@ -210,14 +225,16 @@ function DashboardContent() {
                 <span className="text-2xl font-bold">
                   {totalValue.toLocaleString('en-US', {
                     style: 'currency',
-                    currency: 'USD'
+                    currency: selectedCurrency,
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
                   })}
                 </span>
               )}
-              <span className="text-xs text-muted-foreground">USD</span>
+              <span className="text-xs text-muted-foreground">{selectedCurrency}</span>
             </div>
             <span className="text-xs text-muted-foreground">
-              {isConverting || !ratesAvailable ? 'Converting currencies...' : 'Consolidated value in USD'}
+              {isConverting || !ratesAvailable ? 'Converting currencies...' : `Consolidated value in ${selectedCurrency}`}
               {conversionError && <span className="text-red-500"> ({conversionError})</span>}
             </span>
           </div>

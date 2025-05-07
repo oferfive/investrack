@@ -54,8 +54,8 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Value (USD)</TableHead>
-                <TableHead>Annual Yield</TableHead>
+                <TableHead className="text-right">Value</TableHead>
+                <TableHead className="text-right">Annual Yield</TableHead>
                 <TableHead>Risk Level</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -75,7 +75,7 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
                       {asset.type.charAt(0).toUpperCase() + asset.type.slice(1)}
                     </TableCell>
                     <TableCell>
-                      {asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency })}
+                      {asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </TableCell>
                     <TableCell>
                       {asset.annual_yield !== undefined && asset.annual_yield !== null ? (

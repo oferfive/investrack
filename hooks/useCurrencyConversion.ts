@@ -100,11 +100,35 @@ export function useCurrencyConversion() {
     }
   };
 
+  // Function to convert a single asset's value to any currency
+  const convertToCurrency = (amount: number, currency: Currency, targetCurrency: Currency): number => {
+    if (isLoading || !ratesAvailable) return amount;
+    try {
+      return convertCurrency(amount, currency, targetCurrency);
+    } catch {
+      return amount;
+    }
+  };
+
+  // Function to convert multiple assets to any currency
+  const convertAssetsToCurrency = (assets: Array<{ amount: number; currency: Currency }>, targetCurrency: Currency): number => {
+    if (isLoading || !ratesAvailable) {
+      return assets.reduce((sum, asset) => sum + asset.amount, 0);
+    }
+    try {
+      return convertAllToCurrency(assets, targetCurrency);
+    } catch {
+      return assets.reduce((sum, asset) => sum + asset.amount, 0);
+    }
+  };
+
   return {
     isLoading,
     error,
     ratesAvailable,
     convertToUSD,
-    convertAssetsToUSD
+    convertAssetsToUSD,
+    convertToCurrency,
+    convertAssetsToCurrency
   };
 } 

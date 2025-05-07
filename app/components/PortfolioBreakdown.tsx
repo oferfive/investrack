@@ -3,6 +3,7 @@ import { Asset, AssetType, Currency, RiskLevel } from '@/lib/types';
 import { useMemo, useState } from 'react';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCurrency } from '@/lib/currency-context';
 
 // Color mapping for different asset types
 const COLOR_MAP: Record<AssetType, string> = {
@@ -128,6 +129,7 @@ function assignPaletteColorsToInstitutions(institutions: string[]) {
 export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
   const [breakdownType, setBreakdownType] = useState<BreakdownType>('type');
   const { isLoading: isConverting, ratesAvailable, error: conversionError, convertToUSD } = useCurrencyConversion();
+  const { selectedCurrency } = useCurrency();
 
   // Calculate portfolio breakdown
   const data = useMemo(() => {
@@ -181,7 +183,7 @@ export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
       ...item,
       value: (item.value / totalValue) * 100
     }));
-  }, [assets, convertToUSD, breakdownType]);
+  }, [assets, convertToUSD, breakdownType, selectedCurrency]);
 
   if (assets.length === 0) {
     return (

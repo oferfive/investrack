@@ -78,7 +78,7 @@ export function AssetList({ assets, onEdit, onDelete, onAddAsset }: AssetListPro
                   <TableRow key={asset.id}>
                     <TableCell className="font-medium">{asset.name}</TableCell>
                     <TableCell>{getAssetTypeLabel(asset.type)}</TableCell>
-                    <TableCell className="text-right">{asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency })}</TableCell>
+                    <TableCell className="text-right">{asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
                         {asset.annual_yield !== undefined && (
