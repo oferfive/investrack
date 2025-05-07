@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Asset } from '@/lib/types';
+import { getAssetTypeLabel } from '@/lib/utils';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,7 +20,8 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
+import { MoreHorizontal, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Clock } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 
 interface AssetListViewProps {
   assets: Asset[];
@@ -29,6 +31,40 @@ interface AssetListViewProps {
 
 export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) {
   const [deleteConfirmation, setDeleteConfirmation] = useState<{id: string, name: string} | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Asset | 'recurring' | null, direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+
+  // Sorting logic
+  const sortedAssets = [...assets].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    let aValue: any = a[sortConfig.key as keyof Asset];
+    let bValue: any = b[sortConfig.key as keyof Asset];
+    if (sortConfig.key === 'recurring') {
+      aValue = a.recurring_amount && a.recurring_frequency ? a.recurring_amount + a.recurring_frequency : '';
+      bValue = b.recurring_amount && b.recurring_frequency ? b.recurring_amount + b.recurring_frequency : '';
+    }
+    if (sortConfig.key === 'value' || sortConfig.key === 'recurring_amount') {
+      aValue = Number(aValue);
+      bValue = Number(bValue);
+    }
+    if (sortConfig.key === 'updated_at' || sortConfig.key === 'created_at') {
+      aValue = new Date(aValue).getTime();
+      bValue = new Date(bValue).getTime();
+    }
+    if (aValue === undefined || aValue === null) aValue = '';
+    if (bValue === undefined || bValue === null) bValue = '';
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const handleSort = (key: keyof Asset | 'recurring') => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
 
   // Handle deletion
   const handleDelete = (id: string, name: string) => {
@@ -42,8 +78,17 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
     }
   };
 
+  // Helper to check if asset is stale (not updated in 3+ months)
+  function isStaleAsset(updated_at: string): boolean {
+    if (!updated_at) return false;
+    const updatedDate = new Date(updated_at);
+    const now = new Date();
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+    return updatedDate < threeMonthsAgo;
+  }
+
   return (
-    <>
+    <TooltipProvider>
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Asset List</h2>
         <p className="text-sm text-muted-foreground mb-4">All your investment assets</p>
@@ -52,46 +97,71 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-                <TableHead className="text-right">Annual Yield</TableHead>
-                <TableHead>Risk Level</TableHead>
+                <TableHead onClick={() => handleSort('name')} className="cursor-pointer select-none">
+                  Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
+                <TableHead onClick={() => handleSort('type')} className="cursor-pointer select-none">
+                  Type {sortConfig.key === 'type' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
+                <TableHead onClick={() => handleSort('value')} className="cursor-pointer select-none">
+                  Value {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
+                <TableHead onClick={() => handleSort('updated_at')} className="cursor-pointer select-none">
+                  Updated {sortConfig.key === 'updated_at' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
+                <TableHead onClick={() => handleSort('risk_level')} className="cursor-pointer select-none">
+                  Risk Level {sortConfig.key === 'risk_level' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
+                <TableHead onClick={() => handleSort('recurring')} className="text-right cursor-pointer select-none">
+                  Recurring {sortConfig.key === 'recurring' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {assets.length === 0 ? (
+              {sortedAssets.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No assets found. Add your first asset to get started.
                   </TableCell>
                 </TableRow>
               ) : (
-                assets.map(asset => (
+                sortedAssets.map(asset => (
                   <TableRow key={asset.id}>
                     <TableCell className="font-medium">{asset.name}</TableCell>
                     <TableCell>
-                      {asset.type.charAt(0).toUpperCase() + asset.type.slice(1)}
+                      {getAssetTypeLabel(asset.type)}
                     </TableCell>
                     <TableCell>
                       {asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </TableCell>
                     <TableCell>
-                      {asset.annual_yield !== undefined && asset.annual_yield !== null ? (
-                        <div className="flex items-center">
-                          {asset.annual_yield >= 0 ? (
-                            <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
+                      {asset.updated_at ? (
+                        (() => {
+                          const date = new Date(asset.updated_at);
+                          const month = date.toLocaleString('en-US', { month: 'long' });
+                          const year = String(date.getFullYear()).slice(-2);
+                          const formatted = `${month} ${year}'`;
+                          return isStaleAsset(asset.updated_at) ? (
+                            <span className="inline-flex items-center">
+                              {formatted}
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span><Clock className="ml-4 h-4 w-4 text-red-400 cursor-pointer" /></span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <div className="text-xs whitespace-pre-line text-center">
+                                    {`It's been over 3 months
+since this asset was updated`}
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </span>
                           ) : (
-                            <TrendingDown className="mr-1 h-4 w-4 text-red-500" />
-                          )}
-                          <span className={asset.annual_yield >= 0 ? 'text-green-500' : 'text-red-500'}>
-                            {typeof asset.annual_yield === 'number' ? asset.annual_yield.toFixed(2) : 'N/A'}%
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">N/A</span>
-                      )}
+                            formatted
+                          );
+                        })()
+                      ) : <span className="text-muted-foreground">N/A</span>}
                     </TableCell>
                     <TableCell>
                       <span className={`capitalize ${
@@ -103,6 +173,13 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
                       }`}>
                         {asset.risk_level}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {asset.recurring_amount && asset.recurring_frequency ? (
+                        `${asset.recurring_amount.toLocaleString('en-US', { style: 'currency', currency: asset.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })}/${asset.recurring_frequency.charAt(0).toUpperCase() + asset.recurring_frequency.slice(1)}`
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -154,6 +231,6 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </TooltipProvider>
   );
 } 

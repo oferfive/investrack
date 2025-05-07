@@ -74,7 +74,7 @@ export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
               <h4 className="font-medium text-gray-900 dark:text-gray-100">Top Holdings</h4>
               <div className="mt-2 space-y-2">
                 {topAssets.map(asset => (
-                  <div key={asset.id} className="flex justify-between text-sm">
+                  <div key={asset.id} className="flex justify-between text-sm gap-x-4">
                     <span className="text-gray-600 dark:text-gray-400">{asset.name}</span>
                     <span className="font-medium">
                       {convertToUSD(asset.value, asset.currency).toLocaleString('en-US', { 
