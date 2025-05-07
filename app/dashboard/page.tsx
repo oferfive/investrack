@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useCurrency } from '@/lib/currency-context';
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { AuthGuard } from '@/components/auth-guard';
 
 function DashboardContent() {
   const { user, signOut } = useAuth();
@@ -44,9 +45,17 @@ function DashboardContent() {
 
   const fetchAssets = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
+
       const { data, error } = await supabase
         .from('assets')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -63,31 +72,51 @@ function DashboardContent() {
     fetchAssets();
   };
 
-  const handleExportData = () => {
-    const csvContent = [
-      // CSV Headers
-      ['Name', 'Type', 'Value (USD)', 'Original Value', 'Currency', 'Risk Level', 'Annual Yield', 'Location'],
-      // CSV Data
-      ...assets.map(asset => [
-        asset.name,
-        asset.type,
-        asset.value,
-        asset.currency,
-        asset.risk_level,
-        asset.annual_yield || '',
-        asset.location
-      ])
-    ]
-    .map(row => row.join(','))
-    .join('\n');
+  const handleExportData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'portfolio_data.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      // Fetch assets again to ensure we have the latest data
+      const { data: exportData, error } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const csvContent = [
+        // CSV Headers
+        ['Name', 'Type', 'Value (USD)', 'Original Value', 'Currency', 'Risk Level', 'Annual Yield', 'Location'],
+        // CSV Data
+        ...(exportData || []).map(asset => [
+          asset.name,
+          asset.type,
+          asset.value,
+          asset.currency,
+          asset.risk_level,
+          asset.annual_yield || '',
+          asset.location
+        ])
+      ]
+      .map(row => row.join(','))
+      .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `portfolio_data_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting data:', error);
+    }
   };
 
   // Calculate total value and average yield
@@ -337,8 +366,8 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <ProtectedRoute>
+    <AuthGuard>
       <DashboardContent />
-    </ProtectedRoute>
+    </AuthGuard>
   );
 } 

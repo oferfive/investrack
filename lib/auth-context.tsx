@@ -8,6 +8,8 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signInWithGitHub: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -295,6 +297,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    console.log('Initiating email sign-in');
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('Email sign-in error:', error);
+        throw error;
+      }
+
+      console.log('Email sign-in successful:', data);
+    } catch (err) {
+      console.error('Unexpected error during email sign-in:', err);
+      throw err;
+    }
+  };
+
+  const signUpWithEmail = async (email: string, password: string) => {
+    console.log('Initiating email sign-up');
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+        },
+      });
+
+      if (error) {
+        console.error('Email sign-up error:', error);
+        throw error;
+      }
+
+      console.log('Email sign-up successful:', data);
+    } catch (err) {
+      console.error('Unexpected error during email sign-up:', err);
+      throw err;
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -304,6 +351,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     signInWithGitHub,
+    signInWithEmail,
+    signUpWithEmail,
     signOut,
   };
 
