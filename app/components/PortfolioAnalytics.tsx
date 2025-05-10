@@ -2,13 +2,15 @@ import { Asset } from '@/lib/types';
 import { Card } from "@/components/ui/card"
 import { ArrowDown, ArrowUp, AlertTriangle, Wallet } from 'lucide-react';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
+import { useCurrency } from '@/lib/currency-context';
 
 interface PortfolioAnalyticsProps {
   assets: Asset[];
 }
 
 export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
-  const { isLoading: isConverting, ratesAvailable, error: conversionError, convertToUSD } = useCurrencyConversion();
+  const { isLoading: isConverting, ratesAvailable, error: conversionError, convertToCurrency } = useCurrencyConversion();
+  const { selectedCurrency } = useCurrency();
 
   if (assets.length === 0) return null;
 
@@ -18,11 +20,11 @@ export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
 
   // Calculate insights
   const totalValue = assets.reduce((sum, asset) => {
-    return sum + convertToUSD(asset.value, asset.currency);
+    return sum + convertToCurrency(asset.value, asset.currency, selectedCurrency);
   }, 0);
   
   const riskBreakdown = assets.reduce((acc, asset) => {
-    const value = convertToUSD(asset.value, asset.currency);
+    const value = convertToCurrency(asset.value, asset.currency, selectedCurrency);
     acc[asset.risk_level] = (acc[asset.risk_level] || 0) + value;
     return acc;
   }, {} as Record<string, number>);
@@ -30,7 +32,7 @@ export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
   const highRiskPercentage = ((riskBreakdown.high || 0) / totalValue) * 100;
   
   const topAssets = [...assets]
-    .sort((a, b) => convertToUSD(b.value, b.currency) - convertToUSD(a.value, a.currency))
+    .sort((a, b) => convertToCurrency(b.value, b.currency, selectedCurrency) - convertToCurrency(a.value, a.currency, selectedCurrency))
     .slice(0, 3);
 
   const lowestYieldAsset = assets
@@ -77,9 +79,9 @@ export function PortfolioAnalytics({ assets }: PortfolioAnalyticsProps) {
                   <div key={asset.id} className="flex justify-between text-sm gap-x-4">
                     <span className="text-gray-600 dark:text-gray-400">{asset.name}</span>
                     <span className="font-medium">
-                      {convertToUSD(asset.value, asset.currency).toLocaleString('en-US', { 
+                      {convertToCurrency(asset.value, asset.currency, selectedCurrency).toLocaleString('en-US', { 
                         style: 'currency', 
-                        currency: 'USD',
+                        currency: selectedCurrency,
                         minimumFractionDigits: 0,
                         maximumFractionDigits: 0
                       })}

@@ -31,12 +31,25 @@ function DashboardContent() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [breakdownType, setBreakdownType] = useState<'type' | 'currency' | 'risk' | 'location'>('type');
+  const [includeRealEstate, setIncludeRealEstate] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('includeRealEstate');
+      return stored === null ? true : stored === 'true';
+    }
+    return true;
+  });
 
   const { isLoading: isConverting, ratesAvailable, error: conversionError, convertAssetsToCurrency } = useCurrencyConversion();
 
   useEffect(() => {
     fetchAssets();
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('includeRealEstate', includeRealEstate.toString());
+    }
+  }, [includeRealEstate]);
 
   const handleLogout = async () => {
     await signOut();
@@ -119,17 +132,22 @@ function DashboardContent() {
     }
   };
 
+  // Filter assets based on includeRealEstate toggle
+  const filteredAssets = includeRealEstate
+    ? assets
+    : assets.filter(asset => asset.type !== 'realEstate');
+
   // Calculate total value and average yield
   const { totalValue, averageYield } = useMemo(() => {
-    if (assets.length === 0) return { totalValue: 0, averageYield: 0 };
+    if (filteredAssets.length === 0) return { totalValue: 0, averageYield: 0 };
 
     // Convert all assets to selected currency for total value calculation
-    const total = convertAssetsToCurrency(assets.map(asset => ({
+    const total = convertAssetsToCurrency(filteredAssets.map(asset => ({
       amount: asset.value,
       currency: asset.currency
     })), selectedCurrency);
 
-    const weightedYield = assets.reduce((sum, asset) => {
+    const weightedYield = filteredAssets.reduce((sum, asset) => {
       const weight = asset.value / total;
       return sum + (asset.annual_yield || 0) * weight;
     }, 0);
@@ -138,7 +156,7 @@ function DashboardContent() {
       totalValue: total,
       averageYield: weightedYield
     };
-  }, [assets, convertAssetsToCurrency, selectedCurrency]);
+  }, [filteredAssets, convertAssetsToCurrency, selectedCurrency]);
 
   // Handle edit asset
   const handleEditAsset = (asset: Asset) => {
@@ -234,9 +252,30 @@ function DashboardContent() {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
-          <div className="flex flex-col">
-            <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex flex-col">
               <span className="text-sm text-muted-foreground">Total Portfolio Value</span>
+              <div className="flex items-baseline gap-2">
+                {isConverting || !ratesAvailable ? (
+                  <span className="text-2xl font-bold animate-pulse">Loading...</span>
+                ) : (
+                  <span className="text-2xl font-bold">
+                    {totalValue.toLocaleString('en-US', {
+                      style: 'currency',
+                      currency: selectedCurrency,
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    })}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">{selectedCurrency}</span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {isConverting || !ratesAvailable ? 'Converting currencies...' : ``}
+                {conversionError && <span className="text-red-500"> ({conversionError})</span>}
+              </span>
+            </div>
+            <div className="flex flex-col items-start">
               <div className="flex items-center space-x-2">
                 <Label htmlFor="currency-toggle" className="text-xs">USD</Label>
                 <Switch
@@ -246,26 +285,19 @@ function DashboardContent() {
                 />
                 <Label htmlFor="currency-toggle" className="text-xs">ILS</Label>
               </div>
+              <div className="flex items-center space-x-2 mt-3">
+                <input
+                  type="checkbox"
+                  id="exclude-real-estate"
+                  checked={includeRealEstate}
+                  onChange={e => setIncludeRealEstate(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 accent-primary"
+                />
+                <label htmlFor="exclude-real-estate" className="text-xs text-muted-foreground select-none cursor-pointer break-words">
+                  Include Real Estate
+                </label>
+              </div>
             </div>
-            <div className="flex items-baseline gap-2">
-              {isConverting || !ratesAvailable ? (
-                <span className="text-2xl font-bold animate-pulse">Loading...</span>
-              ) : (
-                <span className="text-2xl font-bold">
-                  {totalValue.toLocaleString('en-US', {
-                    style: 'currency',
-                    currency: selectedCurrency,
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                  })}
-                </span>
-              )}
-              <span className="text-xs text-muted-foreground">{selectedCurrency}</span>
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {isConverting || !ratesAvailable ? 'Converting currencies...' : `Consolidated value in ${selectedCurrency}`}
-              {conversionError && <span className="text-red-500"> ({conversionError})</span>}
-            </span>
           </div>
         </Card>
         
@@ -306,7 +338,7 @@ function DashboardContent() {
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                   </div>
                 ) : (
-                  <PortfolioBreakdown assets={assets} />
+                  <PortfolioBreakdown assets={filteredAssets} />
                 )}
               </Card>
             </div>
@@ -318,7 +350,7 @@ function DashboardContent() {
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
                   </div>
                 ) : (
-                  <PortfolioAnalytics assets={assets} />
+                  <PortfolioAnalytics assets={filteredAssets} />
                 )}
               </Card>
             </div>
@@ -327,7 +359,7 @@ function DashboardContent() {
         {/* Asset List - full width */}
         <div className="col-span-1 lg:col-span-4 mt-6">
           <AssetListView 
-            assets={assets} 
+            assets={filteredAssets} 
             onEdit={handleEditAsset} 
             onDelete={handleDeleteAsset} 
           />

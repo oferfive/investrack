@@ -20,6 +20,7 @@ export function DashboardPage() {
   const [isAddAssetOpen, setIsAddAssetOpen] = useState(false)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null)
+  const [excludeRealEstate, setExcludeRealEstate] = useState(false)
   const [filters, setFilters] = useState({
     assetType: "all" as AssetType | "all",
     currency: "all" as Currency | "all",
@@ -45,6 +46,12 @@ export function DashboardPage() {
   };
 
   const filteredAssets = assets.filter((asset) => {
+    // First apply the real estate exclusion if enabled
+    if (excludeRealEstate && asset.type === "realEstate") {
+      return false;
+    }
+    
+    // Then apply other filters
     return (
       (filters.assetType === "all" || asset.type === filters.assetType) &&
       (filters.currency === "all" || asset.currency === filters.currency) &&
@@ -85,12 +92,25 @@ export function DashboardPage() {
 
   return (
     <DashboardShell>
+         <div style={{color: "red", fontSize: 32}}>TEST MESSAGE - DASHBOARD PAGE</div>
       <DashboardHeader
         heading="Portfolio Dashboard"
         text="Track and manage all your investments in one place."
         onAddAsset={() => setIsAddAssetOpen(true)}
         onUploadStatement={() => setIsUploadOpen(true)}
       />
+      <div className="flex items-center space-x-2 mb-6 p-4 bg-muted rounded-lg">
+        <input
+          type="checkbox"
+          id="exclude-real-estate"
+          checked={excludeRealEstate}
+          onChange={(e) => setExcludeRealEstate(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300"
+        />
+        <label htmlFor="exclude-real-estate" className="text-sm font-medium">
+          {excludeRealEstate ? "Real Estate excluded from calculations" : "Include Real Estate in calculations"}
+        </label>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <PortfolioSummary totalValue={totalValue} totalYield={totalYield} />
       </div>

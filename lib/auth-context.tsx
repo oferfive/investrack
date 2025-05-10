@@ -322,11 +322,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('Initiating email sign-up');
     
     try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      if (!siteUrl) {
+        console.error('NEXT_PUBLIC_SITE_URL is not set');
+        throw new Error('Site URL is not configured');
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`,
+          emailRedirectTo: `${siteUrl}/dashboard`,
         },
       });
 
