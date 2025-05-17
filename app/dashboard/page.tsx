@@ -225,24 +225,32 @@ function DashboardContent() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6 relative">
+      {/* User Avatar - Top Right on Mobile */}
+      <div className="block sm:hidden absolute top-4 right-4 z-20">
+        <UserNav user={user} onLogout={handleLogout} />
+      </div>
+      {/* Top Bar */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">Portfolio Dashboard</h1>
           <p className="text-muted-foreground">Track and manage all your investments in one place.</p>
         </div>
-        <div className="flex gap-2 items-center">
-          <UserNav user={user} onLogout={handleLogout} />
-          <div className="w-0.5" />
-          <Button variant="outline" className="flex items-center gap-2" onClick={handleExportData}>
+        {/* Hide avatar in top bar on mobile */}
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
+          <div className="hidden sm:block">
+            <UserNav user={user} onLogout={handleLogout} />
+          </div>
+          <div className="w-full h-0.5 sm:w-0.5 sm:h-auto bg-border sm:bg-transparent my-2 sm:my-0" />
+          <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto" onClick={handleExportData}>
             <Download className="h-4 w-4" />
             Export Data
           </Button>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
             <Upload className="h-4 w-4" />
             Upload Statement
           </Button>
-          <Button className="flex items-center gap-2" onClick={() => setShowAddForm(true)}>
+          <Button className="flex items-center gap-2 w-full sm:w-auto" onClick={() => setShowAddForm(true)}>
             <Plus className="h-4 w-4" />
             Add Asset
           </Button>
@@ -251,8 +259,8 @@ function DashboardContent() {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="p-6">
-          <div className="flex justify-between items-start mb-2">
+        <Card className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-2">
             <div className="flex flex-col">
               <span className="text-sm text-muted-foreground">Total Portfolio Value</span>
               <div className="flex items-baseline gap-2">
@@ -275,8 +283,8 @@ function DashboardContent() {
                 {conversionError && <span className="text-red-500"> ({conversionError})</span>}
               </span>
             </div>
-            <div className="flex flex-col items-start">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="flex flex-row items-center space-x-2 justify-start sm:justify-end">
                 <Label htmlFor="currency-toggle" className="text-xs">USD</Label>
                 <Switch
                   id="currency-toggle"
@@ -285,7 +293,7 @@ function DashboardContent() {
                 />
                 <Label htmlFor="currency-toggle" className="text-xs">ILS</Label>
               </div>
-              <div className="flex items-center space-x-2 mt-3">
+              <div className="flex flex-row items-center space-x-2 justify-start sm:justify-end">
                 <input
                   type="checkbox"
                   id="exclude-real-estate"
@@ -332,19 +340,21 @@ function DashboardContent() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Portfolio Breakdown */}
             <div className="lg:col-span-2">
-              <Card className="p-6">
-                {isLoading ? (
-                  <div className="h-[400px] flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <PortfolioBreakdown assets={filteredAssets} />
-                )}
+              <Card className="p-4 sm:p-6">
+                <div className="w-full flex justify-center items-center overflow-x-auto sm:overflow-x-visible">
+                  {isLoading ? (
+                    <div className="h-[300px] sm:h-[400px] flex items-center justify-center w-full">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <PortfolioBreakdown assets={filteredAssets} />
+                  )}
+                </div>
               </Card>
             </div>
             {/* Analytics */}
             <div className="lg:col-span-1">
-              <Card className="p-6 h-full">
+              <Card className="p-4 sm:p-6 h-full">
                 {isLoading ? (
                   <div className="h-full flex items-center justify-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

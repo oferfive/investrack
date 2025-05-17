@@ -215,32 +215,35 @@ export function PortfolioBreakdown({ assets }: PortfolioBreakdownProps) {
         </Select>
       </div>
       {conversionError && <div className="text-red-500">{conversionError}</div>}
-      <ResponsiveContainer width="100%" height={400}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={true}
-            label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
-            outerRadius={150}
-            fill="#8884d8"
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <Tooltip 
-            formatter={(value: number) => `${value.toFixed(1)}%`}
-          />
-          <Legend 
-            layout="vertical" 
-            align="right"
-            verticalAlign="middle"
-          />
-        </PieChart>
-      </ResponsiveContainer>
+      {/* Responsive chart container */}
+      <div className="w-full flex justify-center items-center p-4">
+        <ResponsiveContainer width="80%" height={400}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              labelLine={true}
+              label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+              outerRadius={150}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value: number) => `${value.toFixed(1)}%`}
+            />
+            <Legend 
+              layout="vertical" 
+              align="right"
+              verticalAlign="middle"
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 } 

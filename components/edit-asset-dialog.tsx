@@ -116,15 +116,15 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-full sm:max-w-[540px] p-4 sm:p-6 pb-8 rounded-none sm:rounded-lg rounded-t-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Asset</DialogTitle>
           <DialogDescription>Update the details of your investment</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="name"
@@ -139,7 +139,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                   )}
                 />
 
-                <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="type"
@@ -182,7 +182,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                   />
                 </div>
 
-                <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="value"
@@ -217,7 +217,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                   />
                 </div>
 
-                <div className="col-span-2 grid grid-cols-2 gap-4">
+                <div className="col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="currency"
@@ -375,7 +375,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                 />
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex flex-col sm:flex-row justify-end sm:space-x-2 gap-2 sticky bottom-0 bg-black pt-3 z-10">
                 <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
@@ -385,7 +385,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                     console.log("Manual save button clicked");
                     const values = form.getValues();
                     console.log("Form values:", values);
-                    
                     // Create updated asset object with all necessary fields
                     const updatedAsset: Partial<Asset> = {
                       id: asset.id,
@@ -403,7 +402,6 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                       managing_institution: values.managing_institution,
                       updated_at: new Date().toISOString(),
                     };
-                    
                     console.log("Calling onSave with updated asset:", updatedAsset);
                     onSave(updatedAsset);
                   }}

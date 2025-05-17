@@ -193,7 +193,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
 
   return (
     <div 
-      className="fixed right-0 top-0 h-full w-[450px] bg-black text-white border-l border-zinc-800 p-6 overflow-y-auto z-50 shadow-[0_0_50px_rgba(0,0,0,0.3)] transition-all duration-300 ease-in-out"
+      className="fixed right-0 top-0 h-full w-full sm:w-[450px] max-w-full sm:max-w-[450px] bg-black text-white border-l border-zinc-800 p-4 sm:p-6 pb-8 overflow-y-auto z-50 shadow-[0_0_50px_rgba(0,0,0,0.3)] transition-all duration-300 ease-in-out rounded-none sm:rounded-none rounded-t-lg"
       style={{ 
         transform: 'translateX(0)',
         boxShadow: '-10px 0 30px rgba(0, 0, 0, 0.25)'
@@ -244,7 +244,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="type" className="block text-sm text-gray-300 h-5 flex items-center">
                 Asset Type
@@ -283,7 +283,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="value" className="block text-sm text-gray-300 h-5 flex items-center">
                 Value
@@ -314,7 +314,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label htmlFor="currency" className="block text-sm text-gray-300 h-5 flex items-center">
                 Currency
@@ -365,7 +365,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
               value={formData.riskLevel}
               onChange={handleChange}
               className="mt-1 block w-full h-9 pl-2 pr-8 rounded-md bg-zinc-900 border-zinc-800 text-white focus:border-blue-500 focus:ring-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M8%2012L2%206h12z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[right_8px_center] bg-no-repeat"
-              >
+            >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -373,14 +373,14 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
           </div>
 
           <div className="rounded-lg border border-zinc-800">
-            <div className="flex items-center justify-between p-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 gap-2">
               <div>
                 <label htmlFor="hasRecurringContribution" className="text-sm text-gray-300 h-5 flex items-center">
                   Recurring Contribution
                 </label>
                 <p className="text-sm text-gray-500">Do you regularly add to this investment?</p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer mt-2 sm:mt-0">
                 <input
                   type="checkbox"
                   name="hasRecurringContribution"
@@ -395,7 +395,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
             </div>
             {formData.hasRecurringContribution && (
               <div className="px-4 pb-4 pt-2 border-t border-zinc-800">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="recurringAmount" className="block text-sm text-gray-300 h-5 flex items-center">
                       Recurring Amount
@@ -449,7 +449,7 @@ export default function AddAssetForm({ onSuccess, onClose }: AddAssetFormProps) 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sticky bottom-0 bg-black pt-3 z-10">
           <button
             type="button"
             onClick={onClose}
