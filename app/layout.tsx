@@ -23,6 +23,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  console.log('Root layout rendering, will include AutoLogout component');
   return (
     <html lang="en">
       <body className={inter.className}>
