@@ -10,7 +10,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    // Use the appropriate site URL based on the environment
     flowType: 'pkce',
     debug: process.env.NODE_ENV === 'development',
     storageKey: 'sb-auth-token',
@@ -46,15 +45,50 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   db: {
     schema: 'public'
-  },
-  // Add request timeout configuration
-  fetch: (url, options = {}) => {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-    return fetch(url, {
-      ...options,
-      signal: controller.signal
-    }).finally(() => clearTimeout(timeout));
   }
-}); 
+});
+
+// Get last activity timestamp from localStorage
+export const getLastActivity = (): number => {
+  try {
+    const lastActivity = localStorage.getItem('last_activity_timestamp');
+    return lastActivity ? parseInt(lastActivity, 10) : Date.now();
+  } catch (error) {
+    return Date.now();
+  }
+};
+
+// Set last activity timestamp in localStorage
+export const updateLastActivity = (): void => {
+  try {
+    localStorage.setItem('last_activity_timestamp', Date.now().toString());
+  } catch (error) {
+    console.error('Error updating last activity timestamp:', error);
+  }
+};
+
+// Check if session should be expired based on inactivity
+export const checkSessionExpiry = async (): Promise<boolean> => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return false;
+    
+    const lastActivity = getLastActivity();
+    const now = Date.now();
+    const inactiveTime = now - lastActivity;
+    
+    // 30 minutes of inactivity (in milliseconds)
+    const MAX_INACTIVE_TIME = 30 * 60 * 1000;
+    
+    if (inactiveTime > MAX_INACTIVE_TIME) {
+      console.log(`Session expired: Inactive for ${Math.round(inactiveTime/1000/60)} minutes`);
+      await supabase.auth.signOut();
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error checking session expiry:', error);
+    return false;
+  }
+}; 

@@ -375,7 +375,7 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-end sm:space-x-2 gap-2 sticky bottom-0 bg-black pt-3 z-10">
+              <div className="flex flex-col sm:flex-row justify-end sm:space-x-2 gap-2">
                 <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
@@ -404,6 +404,8 @@ export function EditAssetDialog({ asset, open, onOpenChange, onSave }: EditAsset
                     };
                     console.log("Calling onSave with updated asset:", updatedAsset);
                     onSave(updatedAsset);
+                    // Close the dialog after saving
+                    onOpenChange(false);
                   }}
                 >
                   Save Changes

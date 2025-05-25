@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { supabase } from '@/lib/supabase';
+import { supabase, updateLastActivity, checkSessionExpiry } from '@/lib/supabase';
 
-// For testing: 20 seconds
-// const IDLE_TIMEOUT = 20 * 1000;
-// For production: 60 minutes
+// Client-side timeout: 30 minutes 
 const IDLE_TIMEOUT = 30 * 60 * 1000;
 
 export default function AutoLogout() {
@@ -21,7 +19,7 @@ export default function AutoLogout() {
   // Helper function to log for debugging
   const logDebug = (message: string) => {
     console.log(message);
-    setDebugInfo(prev => `${message}\n${prev}`.slice(0, 500)); // Keep log size reasonable
+    setDebugInfo(prev => `${message}\n${prev}`.slice(0, 500));
   };
 
   // The actual logout function - with multiple fallbacks
@@ -53,6 +51,7 @@ export default function AutoLogout() {
       logDebug("LOGOUT: Clearing any leftover auth tokens");
       localStorage.removeItem('sb-auth-token');
       localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('last_activity_timestamp');
       
       // Force hard redirect to login page
       logDebug("LOGOUT: Redirecting to login page");
@@ -64,13 +63,31 @@ export default function AutoLogout() {
     }
   };
 
+  // Check for session expiry on component mount/reload
+  useEffect(() => {
+    const checkForExpiredSession = async () => {
+      if (user) {
+        logDebug("Checking if session has expired due to inactivity...");
+        const isValid = await checkSessionExpiry();
+        if (!isValid) {
+          logDebug("Session expired from inactivity while away");
+          performLogout();
+        } else {
+          logDebug("Session is still valid");
+        }
+      }
+    };
+
+    checkForExpiredSession();
+  }, [user]);
+
   useEffect(() => {
     if (!user) {
       logDebug('No user detected, auto-logout inactive');
       return;
     }
 
-    logDebug(`Auto-logout initialized for user ${user.email} with ${IDLE_TIMEOUT/1000}s timeout`);
+    logDebug(`Auto-logout initialized for user ${user.email} with ${IDLE_TIMEOUT/1000/60}m timeout`);
     
     // Reset the timer when user activity is detected
     const resetIdleTimer = () => {
@@ -81,8 +98,9 @@ export default function AutoLogout() {
         return;
       }
       
-      // Update last activity time
+      // Update both local reference and storage timestamp
       lastActivityRef.current = now;
+      updateLastActivity(); // This updates the timestamp in localStorage
       
       // Clear existing timer if there is one
       if (timerRef.current) {
@@ -92,7 +110,7 @@ export default function AutoLogout() {
       // Set new timer
       timerRef.current = setTimeout(() => {
         const idleTime = Date.now() - lastActivityRef.current;
-        logDebug(`Idle timeout reached. User idle for ${Math.round(idleTime/1000)}s`);
+        logDebug(`Idle timeout reached. User idle for ${Math.round(idleTime/1000/60)}m`);
         performLogout();
       }, IDLE_TIMEOUT);
     };
@@ -100,20 +118,17 @@ export default function AutoLogout() {
     // Track tab visibility changes
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        // When tab becomes visible again, check if we should logout based on idle time
-        const now = Date.now();
-        const idleTime = now - lastActivityRef.current;
-        
-        logDebug(`Tab became visible. Idle time: ${Math.round(idleTime/1000)}s`);
-        
-        if (idleTime >= IDLE_TIMEOUT) {
-          // If user has been idle longer than timeout while tab was hidden, logout
-          logDebug('Idle timeout exceeded while tab was hidden, logging out');
-          performLogout();
-        } else {
-          // Otherwise reset the timer
-          resetIdleTimer();
-        }
+        // When tab becomes visible again, check if session is expired
+        checkSessionExpiry().then(isValid => {
+          if (!isValid) {
+            logDebug('Session expired while tab was hidden');
+            performLogout();
+          } else {
+            // If still valid, reset the timer
+            logDebug('Tab became visible, session still valid');
+            resetIdleTimer();
+          }
+        });
       }
     };
 
