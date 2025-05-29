@@ -5,7 +5,6 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from '@/lib/auth-context'
 import { CurrencyProvider } from "@/lib/currency-context"
-import AutoLogout from '@/components/AutoLogout'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,12 +22,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  console.log('Root layout rendering, will include AutoLogout component');
   return (
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <AutoLogout />
           <CurrencyProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               {children}
