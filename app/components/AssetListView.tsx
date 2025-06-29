@@ -40,25 +40,40 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
     if (!sortConfig.key) return 0;
     let aValue: any = a[sortConfig.key as keyof Asset];
     let bValue: any = b[sortConfig.key as keyof Asset];
+
+    // Normalize values for specific keys
     if (sortConfig.key === 'recurring') {
       aValue = a.recurring_amount && a.recurring_frequency ? a.recurring_amount + a.recurring_frequency : '';
       bValue = b.recurring_amount && b.recurring_frequency ? b.recurring_amount + b.recurring_frequency : '';
-    }
-    if (sortConfig.key === 'value') {
+    } else if (sortConfig.key === 'value') {
       aValue = convertToUSD(a.value, a.currency);
       bValue = convertToUSD(b.value, b.currency);
     } else if (sortConfig.key === 'recurring_amount') {
       aValue = Number(aValue);
       bValue = Number(bValue);
+    } else if (sortConfig.key === 'updated_at' || sortConfig.key === 'created_at') {
+      aValue = aValue ? new Date(aValue).getTime() : 0;
+      bValue = bValue ? new Date(bValue).getTime() : 0;
+    } else if (sortConfig.key === 'risk_level') {
+      // Define a custom order for risk levels
+      const riskOrder = { low: 1, medium: 2, high: 3 };
+      aValue = riskOrder[aValue as 'low' | 'medium' | 'high'] || 0;
+      bValue = riskOrder[bValue as 'low' | 'medium' | 'high'] || 0;
+    } else {
+      // For strings (like ticker, managing_institution), normalize to lowercase string
+      aValue = aValue ? String(aValue).toLowerCase() : '';
+      bValue = bValue ? String(bValue).toLowerCase() : '';
     }
-    if (sortConfig.key === 'updated_at' || sortConfig.key === 'created_at') {
-      aValue = new Date(aValue).getTime();
-      bValue = new Date(bValue).getTime();
-    }
-    if (aValue === undefined || aValue === null) aValue = '';
-    if (bValue === undefined || bValue === null) bValue = '';
+
     if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    // Secondary sort by value (always descending)
+    if (sortConfig.key !== 'value') {
+      const aVal = convertToUSD(a.value, a.currency);
+      const bVal = convertToUSD(b.value, b.currency);
+      if (aVal < bVal) return 1;
+      if (aVal > bVal) return -1;
+    }
     return 0;
   });
 
@@ -111,11 +126,11 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
                 <TableHead onClick={() => handleSort('value')} className="cursor-pointer select-none">
                   Value {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
                 </TableHead>
-                <TableHead>
-                  Institution
+                <TableHead onClick={() => handleSort('managing_institution')} className="cursor-pointer select-none">
+                  Institution {sortConfig.key === 'managing_institution' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
                 </TableHead>
-                <TableHead>
-                  Ticker
+                <TableHead onClick={() => handleSort('ticker')} className="cursor-pointer select-none">
+                  Ticker {sortConfig.key === 'ticker' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
                 </TableHead>
                 <TableHead onClick={() => handleSort('updated_at')} className="cursor-pointer select-none">
                   Updated {sortConfig.key === 'updated_at' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
