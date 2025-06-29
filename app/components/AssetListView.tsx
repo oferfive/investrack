@@ -111,6 +111,12 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
                 <TableHead onClick={() => handleSort('value')} className="cursor-pointer select-none">
                   Value {sortConfig.key === 'value' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
                 </TableHead>
+                <TableHead>
+                  Institution
+                </TableHead>
+                <TableHead>
+                  Ticker
+                </TableHead>
                 <TableHead onClick={() => handleSort('updated_at')} className="cursor-pointer select-none">
                   Updated {sortConfig.key === 'updated_at' && (sortConfig.direction === 'asc' ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />)}
                 </TableHead>
@@ -139,6 +145,12 @@ export function AssetListView({ assets, onEdit, onDelete }: AssetListViewProps) 
                     </TableCell>
                     <TableCell>
                       {asset.value.toLocaleString('en-US', { style: 'currency', currency: asset.currency, minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </TableCell>
+                    <TableCell>
+                      {asset.managing_institution || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell>
+                      {asset.ticker || <span className="text-muted-foreground">—</span>}
                     </TableCell>
                     <TableCell>
                       {asset.updated_at ? (
